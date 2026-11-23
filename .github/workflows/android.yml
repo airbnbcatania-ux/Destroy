@@ -21,8 +21,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-   
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.14.3'
@@ -57,10 +55,10 @@ jobs:
               compileSdk 36
               defaultConfig {
                   applicationId 'com.nabbinator.destroy'
+                  minSdk 24
+                  targetSdk 36
                   versionCode = (System.getenv("VERSION_CODE") ?: "1").toInteger()
                   versionName = (System.getenv("VERSION_NAME") ?: "1.0")
-                  versionCode (System.getenv("VERSION_CODE") ?: "1").toInteger()
-                  versionName (System.getenv("VERSION_NAME") ?: "1.0")
               }
               signingConfigs {
                   release {
