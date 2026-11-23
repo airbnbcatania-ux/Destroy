@@ -4413,6 +4413,21 @@ function frame(now){if(!run||done)return;requestAnimationFrame(frame);let t=(now
   setTimeout(()=>{const s=$('aaaSnd');if(s&&!IS&&S.opt.music)s.style.opacity=1;},900);}
 (function(){const old=$('cine');if(old){old.style.display='none';const sn=$('cineSnd');if(sn)sn.remove();}setTimeout(aaaIntro,30);})();
 
+// ======================= PUBBLICITÀ ADMOB (app Android) =======================
+// Gli annunci veri AdMob funzionano solo dentro l'app Android (WebView con Google Mobile Ads registrato).
+// Sul web (GitHub Pages) resta l'annuncio simulato. Se un annuncio vero non è disponibile, il giocatore
+// riceve comunque la ricompensa con l'annuncio simulato.
+const ADMOB={pub:'ca-pub-2439349628224095',app:'ca-app-pub-2439349628224095~9592810098',rewarded:'ca-app-pub-2439349628224095/3957340037',interstitial:'ca-app-pub-2439349628224095/7625122305',test:true};
+const IS_APP=/[?&]app=android/.test(location.search)||/; wv\)/.test(navigator.userAgent)||!!window.DESTROY_APP;
+(function admobInit(){if(!IS_APP||AD_CFG.client)return;Object.assign(AD_CFG,{client:ADMOB.pub,admobRewarded:ADMOB.rewarded,admobInterstitial:ADMOB.interstitial,test:ADMOB.test});
+  try{const s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+ADMOB.pub;s.setAttribute('data-ad-client',ADMOB.pub);s.setAttribute('data-ad-frequency-hint','120s');
+    if(ADMOB.test)s.setAttribute('data-adbreak-test','on');s.setAttribute('data-admob-rewarded-slot',ADMOB.rewarded);s.setAttribute('data-admob-interstitial-slot',ADMOB.interstitial);document.head.appendChild(s);
+    window.adsbygoogle=window.adsbygoogle||[];window.adBreak=window.adConfig=function(o){adsbygoogle.push(o);};adConfig({preloadAdBreaks:'on',sound:'on',onReady:()=>{AD_REAL=true;}});}catch(e){}})();
+(function(){const _sr=showRewardedAd;showRewardedAd=function(onReward,label){if(!AD_REAL)return _sr(onReward,label);if(adBusy)return;adBusy=true;let st=null,got=false;
+  try{adBreak({type:'reward',name:'ricompensa',beforeAd:()=>{st=adPauseGame();},afterAd:()=>{if(st)adResumeGame(st);},beforeReward:show=>show(),adDismissed:()=>{},adViewed:()=>{got=true;},
+    adBreakDone:info=>{adBusy=false;if(got){try{sfx('badge');}catch(e){}onReward();return;}if(info&&info.breakStatus==='dismissed')return;AD_REAL=false;try{_sr(onReward,label);}finally{AD_REAL=true;}}});}
+  catch(e){adBusy=false;AD_REAL=false;try{_sr(onReward,label);}finally{AD_REAL=true;}}};})();
+
 </script>
 </body>
 </html>
