@@ -465,6 +465,9 @@ input.name{background:#0c0820;border:2px solid #3b2f78;color:#fff;border-radius:
 #aaa canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #aaaSkip{position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top));z-index:2;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.5);color:#fff;border-radius:999px;padding:7px 14px;font:12px 'Russo One',sans-serif;letter-spacing:1px;opacity:0;pointer-events:none;transition:opacity .4s}#aaaSkip.show{opacity:1;pointer-events:auto}
 #aaaSnd{position:absolute;left:14px;top:calc(18px + env(safe-area-inset-top));z-index:2;font:12px 'Russo One',sans-serif;color:#cfc6ef;background:rgba(0,0,0,.5);border-radius:999px;padding:6px 12px;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
+.dlbTabs{position:relative;display:flex;gap:6px;background:rgba(0,0,0,.3);border-radius:12px;padding:3px}
+.dlbTabs button{flex:1;border:0;border-radius:9px;padding:6px 4px;background:none;color:#cfc6ef;font:12px 'Russo One',sans-serif;cursor:pointer}
+.dlbTabs button.on{background:linear-gradient(135deg,#ffd54a,#ff9f1f);color:#3a2100;box-shadow:0 2px 0 #a86200}
 .pvpPh{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}.pvpPh div{display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.05);border-radius:12px;padding:8px 10px;text-align:left}.pvpPh b{font-family:'Russo One',sans-serif;font-size:13px}.pvpPh span{font-size:12px;color:#cfc6ef;line-height:1.35}
 .cupB{display:inline-block;font-size:11px;font-weight:800;color:var(--lc);background:rgba(0,0,0,.3);border:1px solid var(--lc);border-radius:999px;padding:2px 8px;white-space:nowrap}
 .lbOpen{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:16px;border:1px solid rgba(255,213,74,.4);background:linear-gradient(135deg,rgba(90,60,10,.6),rgba(40,20,70,.7));color:#ffd54a;font-family:'Russo One',sans-serif;font-size:15px;cursor:pointer}
@@ -2281,7 +2284,7 @@ function openMulti(){
    <button class="lbOpen" onclick="openLb()"><span>🏆 Classifiche</span><span class="lbOpenB">${cupsBadge('pvp')}${cupsBadge('coop')}</span></button>
    <button class="mpMode friends" onclick="openFriends()"><span class="mmIc">👥</span><span class="mmTx"><b>Amici</b><small>Aggiungili con un link e sfidali online</small></span><span class="mmGo" id="frBadge">›</span></button>
    <button class="mpMode chat" onclick="openChat()"><span class="mmIc">💬</span><span class="mmTx"><b>Chat globale</b><small>Parla con tutti i giocatori di Destroy</small></span><span class="mmGo">›</span></button>
-   <button class="mpMode coop" onclick="openCoop()"><span class="mmIc">🤝</span><span class="mmTx"><b>Cooperativa</b><small>2 giocatori contro il Vuoto · stesso schermo</small></span><span class="mmGo">›</span></button>
+   <button class="mpMode coop" onclick="openCoop()"><span class="mmIc">🤝</span><span class="mmTx"><b>Cooperativa online</b><small>In squadra con un amico · online o stesso schermo</small></span><span class="mmGo">›</span></button>
    <button class="mpMode pvp" onclick="openPvp()"><span class="mmIc">⚔️</span><span class="mmTx"><b>PvP online 1 vs 1</b><small>Sfida un giocatore vero · 3 minuti</small></span><span class="mmGo">›</span></button>
    <button class="mpMode far" onclick="mpCreate()"><span class="mmIc">🔗</span><span class="mmTx"><b>Sfida a distanza</b><small>Stessi nemici, chi ne abbatte di più in 3 minuti vince</small></span><span class="mmGo">›</span></button>
    <button class="goLink" onclick="mpEnter()">📥 Ho un codice sfida</button>
@@ -2829,7 +2832,7 @@ function towerPointer(e,start){
   const sx=(e.clientX-r.left)/r.width*VW,sy=(e.clientY-r.top)/r.height*VH;
   if(start&&R.pvp&&pvpBtnHit(sx,sy))return;
   if(start&&R.net&&netBtnHit(sx,sy))return;
-  if(R.coop){if(start){const j={ax:sx,ay:sy,sx,sy,id:e.pointerId};if(sx<VW/2){if(!R.down1)R.drag=j;}else if(!R.p2.down)R.drag2=j;return;}
+  if(R.coop){if(start){const j={ax:sx,ay:sy,sx,sy,id:e.pointerId};if(R.cnet?R.cnet==='host':sx<VW/2){if(!R.down1)R.drag=j;}else if(!R.p2.down)R.drag2=j;return;}
     const j=R.drag&&R.drag.id===e.pointerId?R.drag:R.drag2&&R.drag2.id===e.pointerId?R.drag2:null;if(!j)return;j.sx=sx;j.sy=sy;const dx=sx-j.ax,dy=sy-j.ay,l=Math.hypot(dx,dy),M=JOY_R*1.6;if(l>M){const k=(l-M)/l;j.ax+=dx*k;j.ay+=dy*k;}return;}
   if(start||!R.drag)R.drag={ax:sx,ay:sy,sx,sy,id:e.pointerId};
   else{if(e.pointerId!==R.drag.id)return;R.drag.sx=sx;R.drag.sy=sy;
@@ -3888,31 +3891,33 @@ function netCloseStreams(){for(const e of NET.es)try{e.close();}catch(x){}NET.es
 const netName=()=>String((typeof mpName==='function'?mpName():S.prof.name)||'Giocatore').slice(0,16);
 function netMe(){cupsInit();return {n:netName(),c:S.cups.pvp|0,av:S.prof.av|0};}
 // ---- schermata PvP online ----
-function openPvp(){sfx('click');netCancel(true);
+function openPvp(){sfx('click');netCancel(true);NET.mode='pvp';
   modal(`<div class="ru" style="font-size:24px">⚔️ PvP online 1 vs 1</div>
   <div class="pvpPh"><div><b style="color:#ffd54a">FASE 1 · 1:30</b><span>Un muro di energia vi divide: abbatti le tue ondate, raccogli monete e potenziati con ⚔ ❤ ⚡.</span></div><div><b style="color:#ff3d5e">FASE 2 · 1:30</b><span>Il varco si apre: DEATHMATCH! Ogni abbattimento dell'avversario vale 1 punto.</span></div></div>
   <ul class="small coopRules"><li>Navicella standard uguale per tutti: vince l'abilità</li><li>Vittoria +30 🏆 · Pareggio +5 · Sconfitta −15</li><li>Se l'avversario si disconnette vinci a tavolino</li></ul>
-  <button class="b3 red goMain" style="width:100%" onclick="netQuick()">🔎 Cerca avversario</button>
-  <div class="row" style="gap:8px;margin-top:10px"><button class="b3 cyan" style="flex:1" onclick="netHost()">👥 Crea stanza</button><button class="b3" style="flex:1" onclick="netJoinAsk()">🔑 Entra con codice</button></div>
+  <button class="b3 red goMain" style="width:100%" onclick="netQuick('pvp')">🔎 Cerca avversario</button>
+  <div class="row" style="gap:8px;margin-top:10px"><button class="b3 cyan" style="flex:1" onclick="netHost('pvp')">👥 Crea stanza</button><button class="b3" style="flex:1" onclick="NET.mode='pvp';netJoinAsk()">🔑 Entra con codice</button></div>
+  <button class="lbOpen" style="margin-top:10px" onclick="openLb('pvp')"><span>🏆 Classifica PvP</span><span class="lbOpenB">${cupsBadge('pvp')}</span></button>
   <button class="b3" style="width:100%;margin-top:10px" onclick="hideModal();setTimeout(()=>typeof openPvpLocal==='function'?openPvpLocal():toast('Non disponibile'),60)">📱 Stesso telefono <span class="small">· 2 giocatori, uno schermo</span></button>
   <button class="b3" style="width:100%;margin-top:10px" onclick="openMulti()">‹ Indietro</button>`);}
-function netWaitUi(title,sub,code){modal(`<div class="netWait"><div class="netRadar"><i></i><i></i><i></i><span>⚔️</span></div><div class="ru" style="font-size:22px">${title}</div>
-  ${code?`<div class="netCode">${code}</div><p class="small">Manda questo codice al tuo amico: deve toccare <b>Entra con codice</b>.</p><button class="b3 cyan" style="width:100%" onclick="netShareCode('${code}')">📤 Condividi codice</button>`:''}
-  <p class="small" id="netSt">${sub}</p><button class="b3" style="width:100%;margin-top:8px" onclick="netCancel();openPvp()">Annulla</button></div>`);}
+function netWaitUi(title,sub,code){modal(`<div class="netWait"><div class="netRadar"><i></i><i></i><i></i><span>${NET.mode==='coop'?'🤝':'⚔️'}</span></div><div class="ru" style="font-size:22px">${title}</div>
+  ${code?`<div class="netCode">${code}</div><p class="small">Manda questo codice al tuo amico: deve toccare <b>Entra con codice</b>${NET.mode==='coop'?' nella Cooperativa':''}.</p><button class="b3 cyan" style="width:100%" onclick="netShareCode('${code}')">📤 Condividi codice</button>`:''}
+  <p class="small" id="netSt">${sub}</p><button class="b3" style="width:100%;margin-top:8px" onclick="netCancel();netBack()">Annulla</button></div>`);}
+const netBack=()=>NET.mode==='coop'?openCoop():openPvp();
 const netSay=s=>{const e=$('netSt');if(e)e.innerHTML=s;};
-function netShareCode(c){const t=`Sfidami a Destroy: battili tutti! ⚔️ Codice stanza: ${c}`;if(navigator.share)navigator.share({text:t}).catch(()=>{});else{try{navigator.clipboard.writeText(t);toast('Codice copiato');}catch(e){}}}
-function netFail(e){netCancel(true);modal(`<div style="font-size:42px">📡</div><div class="ru" style="font-size:20px">Collegamento non riuscito</div><p class="small">${esc(String(e&&e.message||e))}. Controlla la connessione e riprova.</p><button class="b3" style="width:100%" onclick="openPvp()">‹ Indietro</button>`);}
+function netShareCode(c){const t=NET.mode==='coop'?`Giochiamo in squadra a Destroy: battili tutti! 🤝 Codice stanza: ${c}`:`Sfidami a Destroy: battili tutti! ⚔️ Codice stanza: ${c}`;if(navigator.share)navigator.share({text:t}).catch(()=>{});else{try{navigator.clipboard.writeText(t);toast('Codice copiato');}catch(e){}}}
+function netFail(e){netCancel(true);modal(`<div style="font-size:42px">📡</div><div class="ru" style="font-size:20px">Collegamento non riuscito</div><p class="small">${esc(String(e&&e.message||e))}. Controlla la connessione e riprova.</p><button class="b3" style="width:100%" onclick="netBack()">‹ Indietro</button>`);}
 // ricerca rapida: chi ha l'uid "maggiore" crea la stanza per l'altro, così non la creano entrambi
-async function netQuick(){netWaitUi('Cerco un avversario…','Collegamento al server…');NET.state='mm';
+async function netQuick(mode){NET.mode=mode||'pvp';netWaitUi(NET.mode==='coop'?'Cerco un compagno…':'Cerco un avversario…','Collegamento al server…');NET.state='mm';
   try{if(!await fbAuth())throw new Error('Server non raggiungibile');await netClock();
     netStream(`mm/${FB.uid}/room`,(ty,p,d)=>{if(d&&NET.state==='mm')netGotRoom(d,true);});
-    const me=netMe();const loop=async()=>{if(NET.state!=='mm')return;
+    const me=Object.assign(netMe(),{m:NET.mode,s:NET.sec||1});const loop=async()=>{if(NET.state!=='mm')return;
       try{await rt(`mm/${FB.uid}`,'PATCH',Object.assign({t:SV},me));
-        const all=await rt('mm')||{},now=srvNow();const cand=Object.entries(all).filter(([u,v])=>u!==FB.uid&&v&&!v.room&&now-(v.t||0)<15000).sort((a,b)=>Math.abs((a[1].c|0)-me.c)-Math.abs((b[1].c|0)-me.c));
-        netSay(cand.length?'Avversario trovato, collegamento…':'In attesa di un avversario… 🌌<br><small>Più giocatori sono online, più è veloce</small>');
+        const all=await rt('mm')||{},now=srvNow();const cand=Object.entries(all).filter(([u,v])=>u!==FB.uid&&v&&!v.room&&now-(v.t||0)<15000&&(v.m||'pvp')===NET.mode).sort((a,b)=>Math.abs((a[1].c|0)-me.c)-Math.abs((b[1].c|0)-me.c));
+        netSay(cand.length?(NET.mode==='coop'?'Compagno trovato, collegamento…':'Avversario trovato, collegamento…'):(NET.mode==='coop'?'In attesa di un compagno… 🌌':'In attesa di un avversario… 🌌')+'<br><small>Più giocatori sono online, più è veloce</small>');
         const pick=cand.find(([u])=>u<FB.uid);
         if(pick){const [ou,ov]=pick,id='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-          await rt(`rooms/${id}`,'PUT',{a:ou,b:FB.uid,na:ov.n||'Giocatore',nb:me.n,ca:ov.c|0,cb:me.c,created:SV});
+          await rt(`rooms/${id}`,'PUT',{a:ou,b:FB.uid,na:ov.n||'Giocatore',nb:me.n,ca:ov.c|0,cb:me.c,m:NET.mode,sec:Math.min(ov.s||1,me.s||1),created:SV});
           await rt(`mm/${ou}/room`,'PUT',id);NET.state='wait';netSay('Attendo conferma dell\'avversario…');netWaitStart(id,1,()=>{NET.state='mm';netSay('Riprovo…');NET.mmTimer=setTimeout(loop,800);});return;}}
       catch(e){netSay('Problema di collegamento, riprovo…');}
       NET.mmTimer=setTimeout(loop,2500);};loop();}
@@ -3924,23 +3929,23 @@ function netWaitStart(id,me,onTimeout){let done=false;const to=setTimeout(()=>{i
   netStream(`rooms/${id}`,(ty,p,d)=>{if(done)return;const r=p==='/'?d:null;const st=r?r.start:(p==='/start'?d:null);if(!st)return;done=true;clearTimeout(to);
     rt(`rooms/${id}`).then(full=>netBegin(id,me,full)).catch(netFail);});}
 // stanza con codice per giocare con un amico
-async function netHost(){NET.state='host';try{if(!await fbAuth())throw new Error('Server non raggiungibile');await netClock();
+async function netHost(mode){NET.mode=mode||'pvp';NET.state='host';try{if(!await fbAuth())throw new Error('Server non raggiungibile');await netClock();
     let code='';const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';for(let i=0;i<5;i++)code+=A[Math.floor(Math.random()*A.length)];const me=netMe();
-    NET.hostCode=code;await rt(`rooms/${code}`,'PUT',{a:FB.uid,na:me.n,ca:me.c,code:1,created:SV});netWaitUi('Stanza creata','In attesa del tuo amico…',code);
+    NET.hostCode=code;await rt(`rooms/${code}`,'PUT',{a:FB.uid,na:me.n,ca:me.c,code:1,m:NET.mode,sec:NET.sec||1,created:SV});netWaitUi('Stanza creata','In attesa del tuo amico…',code);
     netStream(`rooms/${code}/b`,(ty,p,d)=>{if(d&&NET.state==='host'){NET.state='wait';netSay('Amico collegato!');rt(`rooms/${code}`,'PATCH',{start:SV}).then(()=>netWaitStart(code,0)).catch(netFail);}});}
   catch(e){netFail(e);}}
 function netJoinAsk(){modal(`<div class="ru" style="font-size:22px">🔑 Entra con codice</div><p class="small">Scrivi il codice della stanza del tuo amico:</p>
   <input id="netIn" maxlength="5" class="accIn" style="text-transform:uppercase;text-align:center;font-size:26px;letter-spacing:6px" placeholder="ABCDE">
-  <div class="small" id="netSt" style="min-height:16px;color:#ff4d6d"></div><button class="b3 red goMain" style="width:100%" onclick="netJoin($('netIn').value)">Entra</button><button class="b3" style="width:100%;margin-top:10px" onclick="openPvp()">‹ Indietro</button>`);}
+  <div class="small" id="netSt" style="min-height:16px;color:#ff4d6d"></div><button class="b3 red goMain" style="width:100%" onclick="netJoin($('netIn').value)">Entra</button><button class="b3" style="width:100%;margin-top:10px" onclick="netBack()">‹ Indietro</button>`);}
 async function netJoin(code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==5)return netSay('Il codice ha 5 caratteri.');
   try{netSay('Collegamento…');if(!await fbAuth())throw new Error('Server non raggiungibile');await netClock();const r=await rt(`rooms/${code}`);
-    if(!r||!r.a)return netSay('Stanza non trovata.');if(r.a===FB.uid)return netSay('Questa è la tua stanza 🙂');if(r.b&&r.b!==FB.uid)return netSay('Stanza già piena.');
+    if(!r||!r.a)return netSay('Stanza non trovata.');NET.mode=r.m||'pvp';if(r.a===FB.uid)return netSay('Questa è la tua stanza 🙂');if(r.b&&r.b!==FB.uid)return netSay('Stanza già piena.');
     const me=netMe();await rt(`rooms/${code}`,'PATCH',{b:FB.uid,nb:me.n,cb:me.c});NET.state='wait';netWaitUi('Collegato!','Attendo l\'avvio della partita…');netWaitStart(code,1);}
   catch(e){netSay('Errore di collegamento, riprova.');}}
 function netCancel(silent){if(NET.mmTimer)clearTimeout(NET.mmTimer);NET.mmTimer=null;if(FB.uid&&NET.state==='mm')rt(`mm/${FB.uid}`,'DELETE').catch(()=>{});
   if(NET.state==='host'&&NET.hostCode)rt(`rooms/${NET.hostCode}`,'DELETE').catch(()=>{});if(!R||!R.net)netCloseStreams();NET.state='idle';}
 // ---- partita ----
-function netBegin(id,me,room){netCloseStreams();NET.room=id;NET.me=me;NET.seen={};NET.seq=0;NET.op={x:0,y:0,rx:0,ry:0,h:1,m:1,d:0,dn:0,a:0,u:[0,0,0]};NET.opRecv=srvNow();NET.state='play';
+function netBegin(id,me,room){if((room&&room.m||'pvp')==='coop')return coopNetBegin(id,me,room);netCloseStreams();NET.room=id;NET.me=me;NET.seen={};NET.seq=0;NET.op={x:0,y:0,rx:0,ry:0,h:1,m:1,d:0,dn:0,a:0,u:[0,0,0]};NET.opRecv=srvNow();NET.state='play';
   NET.opName=me?room.na:room.nb;NET.opCups=me?room.ca:room.cb;NET.startAt=(room.start||srvNow())+4000;
   hideModal();startRun({pvp:true,net:true,sec:1});MPX=true;R.mods=[];R.net=true;R.pvpPh=0;R.pvpT=PVP_FARM+PVP_DM;R.netD=0;R.netShots=[];R.myShots=[];R.duelT=0.6;
   R.pvMid=R.tx;R.pvZ=R.ty;R.tx=R.pvMid+(me?90:-90);R.camX=R.tx;R.pvBase=null;R.pv=[{c:0,dmg:0,hp:0,spd:0}];R.paused=false;R.spawnT=1e9;pvpUi(true);
@@ -4066,6 +4071,7 @@ async function dlbLoad(force){if(DLB.busy||(!force&&Date.now()-DLB.t<60000&&DLB.
   catch(e){DLB.err=1;}finally{DLB.busy=false;}return DLB.list;}
 function dlbLeft(){const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);const s=Math.max(0,(m-n)/1000|0);return Math.floor(s/3600)+'h '+String(Math.floor(s%3600/60)).padStart(2,'0')+'m';}
 const DLB_MED=['🥇','🥈','🥉'];
+function dlbErrMsg(short){const e=String(FB.err||'');if(/403/.test(e))return short?'🔒 Classifica in attivazione…':'🔒 Il server ha rifiutato l\'accesso alla classifica (regola Firestore <b>lb_day</b> mancante).';if(/offline|fetch|Failed/i.test(e)||!navigator.onLine)return '📡 Nessuna connessione al server';return '📡 Classifica non raggiungibile'+(e&&!short?' ('+e+')':'');}
 const dlbEsc=t=>String(t).replace(/[<>&"]/g,'');
 function dlbIni(n){n=dlbEsc(n).trim();return (n[0]||'?').toUpperCase();}
 function dlbHue(u){let h=2166136261;for(const c of String(u)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return Math.round(((h>>>0)%1000)*137.508)%360;}
@@ -4074,16 +4080,16 @@ function dlbPodium(L){const ord=[1,0,2];return `<div class="dlbPod">${ord.map(i=
   return `<div class="dlbP p${i}${me?' me':''}">${i===0?'<div class="dlbCrown">👑</div>':''}<div class="dlbPA" style="--h:${dlbHue(p.uid)}">${dlbIni(p.name)}</div><div class="dlbPN">${dlbEsc(p.name)}</div><div class="dlbPB"><span>${DLB_MED[i]}</span><b>🌊 ${p.wave}</b></div></div>`;}).join('')}</div>`;}
 function dlbCard(){let c=$('dlbCard');if(!c){const afk=$('afkCard');if(!afk)return;c=document.createElement('div');c.id='dlbCard';c.className='dlbCard';c.onclick=openDailyLb;afk.parentNode.insertBefore(c,afk);}
   const m=dlbMine(),L=DLB.list,myI=L?L.findIndex(p=>p.uid===FB.uid):-1;
-  let body;if(!L)body=`<div class="dlbEmpty">${DLB.err?'📡 Classifica non raggiungibile da qui':'<span class="dlbSpin"></span> Caricamento…'}</div>`;
+  let body;if(!L)body=`<div class="dlbEmpty">${DLB.err?dlbErrMsg(1):'<span class="dlbSpin"></span> Caricamento…'}</div>`;
   else if(!L.length)body=`<div class="dlbEmpty">🚀 Nessuno in classifica oggi.<br><b>Gioca la campagna e prendi il primo posto!</b></div>`;
   else body=dlbPodium(L)+(myI>2?dlbRow(L[myI],myI):'');
   const pos=myI>=0?'#'+(myI+1):'—';
   c.innerHTML=`<div class="dlbGlow"></div><div class="dlbHead"><div class="dlbTitle"><span class="dlbTro">🏆</span><div><b>CLASSIFICA DI OGGI</b><small>Campagna · ondata più alta</small></div></div><span class="dlbT">⏳ ${dlbLeft()}</span></div>${body}
   <div class="dlbFoot"><div class="dlbStat"><small>IL TUO RECORD</small><b>${m.w?'🌊 '+m.w:'—'}</b></div><div class="dlbStat"><small>POSIZIONE</small><b>${pos}</b></div><div class="dlbMore">Vedi tutti ›</div></div>`;}
 async function openDailyLb(){sfx('click');modal(`<div class="dlbMHead"><span class="dlbTro big">🏆</span><div class="ru" style="font-size:22px">Classifica di oggi</div><div class="small">Campagna · ondata più alta raggiunta oggi</div><span class="dlbT">⏳ si azzera tra ${dlbLeft()}</span></div><div id="dlbFull" class="dlbFull"><div class="small">Caricamento…</div></div><button class="b3 goMain" onclick="hideModal()">Chiudi</button>`);
-  await dlbSubmit();const L=await dlbLoad(true),el=$('dlbFull');if(!el)return;el.innerHTML=!L?'<div class="dlbEmpty">📡 Classifica non raggiungibile. Apri il gioco dal link GitHub.</div>':L.length?dlbPodium(L)+L.slice(3).map((p,i)=>dlbRow(p,i+3)).join(''):'<div class="dlbEmpty">Ancora nessuno oggi. Sii il primo!</div>';dlbCard();}
+  await dlbSubmit();const L=await dlbLoad(true),el=$('dlbFull');if(!el)return;el.innerHTML=!L?`<div class="dlbEmpty">${dlbErrMsg()}</div>`:L.length?dlbPodium(L)+L.slice(3).map((p,i)=>dlbRow(p,i+3)).join(''):'<div class="dlbEmpty">Ancora nessuno oggi. Sii il primo!</div>';dlbCard();}
 setInterval(()=>{try{const m=dlbMine();
-  if(R&&!R.mp&&!R.pvp&&!R.net&&!R.tut&&R.wave>m.w){m.w=R.wave;m.sec=R.sec||1;}
+  if(R&&!R.mp&&!R.pvp&&!R.net&&!R.coop&&!R.tut&&R.wave>m.w){m.w=R.wave;m.sec=R.sec||1;}
   if(m.w>(m.sent||0)&&Date.now()-DLB.sent>30000&&(!R||R.over||R.wave%5===0)){DLB.sent=Date.now();dlbSubmit();}
   if($('sHome')&&$('sHome').classList.contains('on')){if(Date.now()-DLB.t>60000&&!DLB.busy)dlbLoad().then(dlbCard);else dlbCard();}}catch(e){}},2000);
 
@@ -4188,7 +4194,7 @@ const ABIL={
  leviathan:{n:'Ruggito abissale',e:'🌊',cd:30,c:'#45e9ff',d:'Stordisce tutti i nemici per 2,5 s; per 6 s subiscono il 30% di danno in più.'},
  sovereign:{n:'Prisma cristallino',e:'💎',cd:24,c:'#ff7be5',d:'3 cristalli orbitano per 6 s: ogni colpo che li attraversa si divide in 3.'},
 };
-function abOff(){return !R||R.pvp||R.net||MPX||R.tut;}
+function abOff(){return !R||R.pvp||R.net||MPX||R.tut||R.cnet==='guest';}
 function abS(){if(!R)return null;if(!R.ab){const k=S.model||'stealth';R.ab={k,def:ABIL[k]||ABIL.stealth,cd:5,a:0,t:0,trail:[],crys:null};}return R.ab;}
 function abDir(){return R.hd!=null?R.hd:(R.aim||0);}
 function abUse(auto){const A=abS();if(!A||abOff()||A.def.passive)return false;if(A.cd>0||A.a>0){if(!auto)toast(A.def.e+' '+A.def.n+': pronta tra '+Math.ceil(A.cd)+' s');return false;}
@@ -4417,16 +4423,109 @@ function frame(now){if(!run||done)return;requestAnimationFrame(frame);let t=(now
 // Gli annunci veri AdMob funzionano solo dentro l'app Android (WebView con Google Mobile Ads registrato).
 // Sul web (GitHub Pages) resta l'annuncio simulato. Se un annuncio vero non è disponibile, il giocatore
 // riceve comunque la ricompensa con l'annuncio simulato.
-const ADMOB={pub:'ca-pub-2439349628224095',app:'ca-app-pub-2439349628224095~9592810098',rewarded:'ca-app-pub-2439349628224095/3957340037',interstitial:'ca-app-pub-2439349628224095/7625122305',test:true};
+const ADMOB={pub:'ca-pub-2439349628224095',app:'ca-app-pub-2439349628224095~9592810098',rewarded:'ca-app-pub-2439349628224095/3957340037',interstitial:'',speed:'ca-app-pub-2439349628224095/7625122305',test:true}; // l'unità 7625122305 è «Velocità x2» (con premio); nessuna interstitial ancora creata
 const IS_APP=/[?&]app=android/.test(location.search)||/; wv\)/.test(navigator.userAgent)||!!window.DESTROY_APP;
 (function admobInit(){if(!IS_APP||AD_CFG.client)return;Object.assign(AD_CFG,{client:ADMOB.pub,admobRewarded:ADMOB.rewarded,admobInterstitial:ADMOB.interstitial,test:ADMOB.test});
   try{const s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+ADMOB.pub;s.setAttribute('data-ad-client',ADMOB.pub);s.setAttribute('data-ad-frequency-hint','120s');
-    if(ADMOB.test)s.setAttribute('data-adbreak-test','on');s.setAttribute('data-admob-rewarded-slot',ADMOB.rewarded);s.setAttribute('data-admob-interstitial-slot',ADMOB.interstitial);document.head.appendChild(s);
+    if(ADMOB.test)s.setAttribute('data-adbreak-test','on');s.setAttribute('data-admob-rewarded-slot',ADMOB.rewarded);if(ADMOB.interstitial)s.setAttribute('data-admob-interstitial-slot',ADMOB.interstitial);document.head.appendChild(s);
     window.adsbygoogle=window.adsbygoogle||[];window.adBreak=window.adConfig=function(o){adsbygoogle.push(o);};adConfig({preloadAdBreaks:'on',sound:'on',onReady:()=>{AD_REAL=true;}});}catch(e){}})();
 (function(){const _sr=showRewardedAd;showRewardedAd=function(onReward,label){if(!AD_REAL)return _sr(onReward,label);if(adBusy)return;adBusy=true;let st=null,got=false;
   try{adBreak({type:'reward',name:'ricompensa',beforeAd:()=>{st=adPauseGame();},afterAd:()=>{if(st)adResumeGame(st);},beforeReward:show=>show(),adDismissed:()=>{},adViewed:()=>{got=true;},
     adBreakDone:info=>{adBusy=false;if(got){try{sfx('badge');}catch(e){}onReward();return;}if(info&&info.breakStatus==='dismissed')return;AD_REAL=false;try{_sr(onReward,label);}finally{AD_REAL=true;}}});}
   catch(e){adBusy=false;AD_REAL=false;try{_sr(onReward,label);}finally{AD_REAL=true;}}};})();
+
+// ======================= COOPERATIVA ONLINE (2 telefoni) =======================
+// Chi crea/accetta la stanza come "a" è l'host: simula la partita completa (nemici, danni, monete).
+// L'altro (guest) muove la sua navicella, la manda all'host e riceve 8 volte al secondo lo stato del mondo.
+// Le monete e i potenziamenti sono condivisi: gli acquisti del guest vengono eseguiti dall'host.
+const openCoopLocal=window.openCoop;
+window.openCoop=function(){sfx('click');netCancel(true);NET.mode='coop';NET.sec=NET.sec||1;
+  modal(`<div class="ru" style="font-size:24px">🤝 Cooperativa</div>
+  <p class="small" style="margin:4px 0 10px">In squadra contro il Vuoto: le navi nemiche attaccano tutti e due, difendetevi a vicenda!</p>
+  <ul class="small coopRules"><li>Ognuno gioca dal suo telefono, in tempo reale</li><li>Monete e potenziamenti in comune</li><li>Chi cade viene rianimato se il compagno gli sta vicino 2,5 secondi</li><li>+1 🏆 ogni 2 ondate e +10 per ogni boss</li></ul>
+  <p class="small" style="margin:6px 0 0">Galassia:</p>${mpSecPick('coN')}
+  <button class="b3 red goMain" style="width:100%" onclick="NET.sec=mpSecVal('coN');netQuick('coop')">🔎 Cerca un compagno</button>
+  <div class="row" style="gap:8px;margin-top:10px"><button class="b3 cyan" style="flex:1" onclick="NET.sec=mpSecVal('coN');netHost('coop')">👥 Crea stanza</button><button class="b3" style="flex:1" onclick="NET.mode='coop';netJoinAsk()">🔑 Entra con codice</button></div>
+  <button class="lbOpen" style="margin-top:10px" onclick="openLb('coop')"><span>🏆 Classifica Cooperativa</span><span class="lbOpenB">${cupsBadge('coop')}</span></button>
+  <button class="b3" style="width:100%;margin-top:10px" onclick="hideModal();setTimeout(()=>openCoopLocal(),60)">📱 Stesso telefono <span class="small">· 2 giocatori, uno schermo</span></button>
+  <button class="b3" style="width:100%;margin-top:10px" onclick="openMulti()">‹ Indietro</button>`);
+  setTimeout(()=>{const r=$('coN');if(r)r.querySelectorAll('.mpSec').forEach(b=>b.classList.toggle('on',+b.dataset.s===NET.sec));},0);};
+const CN={snap:null,snapAt:0,snapN:0,emap:{},g:null,gAt:0,nid:0,buys:{},sendT:null,overAt:0,ft:[0,0],lastBn:'',left:false};
+function coopNetBegin(id,me,room){netCloseStreams();Object.assign(CN,{snap:null,snapAt:performance.now(),snapN:0,emap:{},g:null,gAt:performance.now(),nid:0,buys:{},overAt:0,ft:[0,0],lastBn:'',left:false});
+  NET.room=id;NET.me=me;NET.mode='coop';NET.state='play';NET.opName=me?room.na:room.nb;
+  hideModal();startRun({coop:true,sec:room.sec||1});R.cnet=me===0?'host':'guest';R.banner={t:'🤝 IN SQUADRA CON '+String(NET.opName||'').toUpperCase().slice(0,12),c:'#ffd54a',l:2.4};
+  const bs=$('bSpeed');if(bs)bs.style.display='none';
+  if(R.cnet==='host'){
+    netStream(`rooms/${id}/g`,(ty,p,d)=>{if(p==='/'){if(d)CN.g=d;}else if(CN.g)CN.g[p.slice(1)]=d;CN.gAt=performance.now();});
+    netStream(`rooms/${id}/buy`,(ty,p,d)=>{const add=(k,v)=>{if(!v||CN.buys[k])return;CN.buys[k]=1;if(R&&!R.over){const before=R.L[v.id]||0;buy(v.id,true);if((R.L[v.id]||0)>before){const it=SHOP.find(x=>x.id===v.id);R.banner={t:'🛒 '+String(NET.opName||'P2').slice(0,10)+': '+(it?it.n:v.id),c:'#ffb44a',l:1.3};}}};
+      if(p==='/'){if(d)Object.entries(d).forEach(([k,v])=>add(k,v));}else add(p.slice(1),d);});
+  }else{
+    R.spawnT=1e9;R.spawnQ=[];R.enemies=[];
+    netStream(`rooms/${id}/s`,(ty,p,d)=>{if(p==='/'&&d){CN.snap=d;CN.snapAt=performance.now();CN.snapN++;}});
+  }
+  clearInterval(CN.sendT);CN.sendT=setInterval(coopNetSend,R.cnet==='host'?125:100);}
+function coopNetSend(){if(NET.state!=='play'||!R||!R.cnet){clearInterval(CN.sendT);return;}const room=NET.room;
+  if(R.cnet==='guest'){if(R.over)return;const p=R.p2;rt(`rooms/${room}/g`,'PUT',{x:Math.round(p.x),y:Math.round(p.y),a:+(p.aim||0).toFixed(2),t:SV}).catch(()=>{});return;}
+  const r2=v=>Math.round(v);const E=[];for(const e of R.enemies){if(e.dead)continue;if(!e._nid)e._nid=++CN.nid;E.push([e._nid,e.k,r2(e.x),r2(e.y),r2(e.hp),r2(e.maxHp),e.lv||0,e.elite?1:0]);if(E.length>=90)break;}
+  const p=R.p2,snap={x:r2(R.tx),y:r2(R.ty),h:r2(R.hp),mh:r2(R.st.maxHp),d1:R.down1?1:0,r1:+(R.rev1||0).toFixed(2),a:+(R.aim||0).toFixed(2),ph:r2(p.hp),pd:p.down?1:0,pr:+(p.rev||0).toFixed(2),
+    w:R.wave,wk:R.waveKill,wt:R.waveTot,c:r2(R.coins),k:R.kills,bk:R.bossK,L:R.L,e:E,bn:R.banner?R.banner.t:'',bc:R.banner?R.banner.c:'',over:R.over?1:0,t:SV};
+  rt(`rooms/${room}/s`,'PUT',snap).catch(()=>{});
+  if(R.over){if(!CN.overAt)CN.overAt=Date.now();if(Date.now()-CN.overAt>5000){clearInterval(CN.sendT);NET.state='idle';netCloseStreams();setTimeout(()=>rt(`rooms/${room}`,'DELETE').catch(()=>{}),3000);}}}
+// host: applica la posizione del compagno dopo ogni aggiornamento
+function coopHostApply(dt){const p=R.p2,g=CN.g;if(CN.left)return;
+  if(performance.now()-CN.gAt>10000){CN.left=true;if(!p.down){p.down=true;p.hp=0;}R.banner={t:'📡 '+String(NET.opName||'Il compagno').slice(0,12)+' si è disconnesso',c:'#ff8a3a',l:2.5};return;}
+  if(g&&!p.down){const k=Math.min(1,dt*14);p.x+=(g.x-p.x)*k;p.y+=(g.y-p.y)*k;}}
+// guest: niente simulazione, solo il mondo ricevuto dall'host + la propria navicella
+function coopGuestTick(dt){const s=CN.snap,p=R.p2;R.t+=dt;if(R.over)return;const wp=$('wavePrev');if(wp&&wp.style.display!=='none')wp.style.display='none';
+  if(!p.down){const mv=moveUnit(R.drag2,dt);if(mv){let nx=p.x+mv[0],ny=p.y+mv[1];if(!R.down1)[nx,ny]=leash(nx,ny,R.tx,R.ty);p.x=nx;p.y=ny;}}
+  if(performance.now()-CN.snapAt>10000)return coopGuestEnd(null,true);
+  if(s){const k=Math.min(1,dt*12);R.tx+=(s.x-R.tx)*k;R.ty+=(s.y-R.ty)*k;R.aim=s.a;R.hp=s.h;R.st.maxHp=s.mh;R.down1=!!s.d1;R.rev1=s.r1;p.hp=s.ph;p.down=!!s.pd;p.rev=s.pr;
+    R.wave=s.w;R.waveKill=s.wk;R.waveTot=s.wt;if(R.coins!==s.c)shopDirty=true;R.coins=s.c;R.kills=s.k;R.bossK=s.bk;
+    const Ls=JSON.stringify(s.L||{});if(Ls!==CN.Ls){CN.Ls=Ls;R.L=s.L||{};const mh=R.st.maxHp;R.st=calc();R.st.maxHp=mh;shopDirty=true;}
+    if(s.bn&&s.bn!==CN.lastBn){CN.lastBn=s.bn;R.banner={t:s.bn,c:s.bc||'#ffd54a',l:1.6};}else if(!s.bn)CN.lastBn='';
+    if(CN.appliedN!==CN.snapN){CN.appliedN=CN.snapN;const seen={};
+      for(const a of s.e||[]){const [id,kk,x,y,hp,mh,lvl,el]=a;seen[id]=1;let e=CN.emap[id];
+        if(!e&&ENEMY[kk]){spawn(kk,x,y,mh);e=R.enemies[R.enemies.length-1];e._nid=id;e.lv=lvl;e.elite=!!el;e.sp=0;CN.emap[id]=e;}
+        if(e){e._tx=x;e._ty=y;if(hp<e.hp)e.hit=0.12;e.hp=hp;e.maxHp=mh;}}
+      for(const id in CN.emap)if(!seen[id]){const e=CN.emap[id];delete CN.emap[id];e.dead=true;try{burst(e.x,e.y,(e.d&&e.d.col)||'#ff6a5a',14,26);sfx('boom');}catch(_){}}
+      R.enemies=R.enemies.filter(e=>!e.dead);}
+    if(s.over)return coopGuestEnd(s,false);}
+  for(const e of R.enemies){if(e._tx==null)continue;const k=Math.min(1,dt*10);e.x+=(e._tx-e.x)*k;e.y+=(e._ty-e.y)*k;if(e.hit>0)e.hit-=dt;}
+  // colpi solo visivi delle due navicelle (i danni veri li calcola l'host)
+  const shooters=[[R.tx,R.ty,R.down1,0],[p.x,p.y,p.down,1]];
+  for(const [x,y,down,i] of shooters){if(down)continue;CN.ft[i]-=dt*R.st.aspd;if(CN.ft[i]>0)continue;let best=null,bd=R.st.range;for(const e of R.enemies){const d=dist(e.x,e.y,x,y);if(d<bd){bd=d;best=e;}}
+    if(best){CN.ft[i]=1;const a=Math.atan2(best.y-y,best.x-x);if(i)p.aim=a;R.proj.push({k:'b',x:x+Math.cos(a)*14,y:y+Math.sin(a)*14,h:40,vx:Math.cos(a)*430,vy:Math.sin(a)*430,l:bd/430,vis:1,hitS:new Set()});}else CN.ft[i]=0;}
+  for(const q of R.proj){q.x+=q.vx*dt;q.y+=q.vy*dt;q.l-=dt;}R.proj=R.proj.filter(q=>q.l>0);
+  for(const f of R.fx){f.l-=dt;if(f.t==='txt')f.h+=26*dt;if(f.t==='p'&&!f.nog){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vh-=420*dt;f.h+=f.vh*dt;if(f.h<0){f.h=0;f.vh*=-0.4;f.vx*=0.6;f.vy*=0.6;}}}
+  R.fx=R.fx.filter(f=>f.l>0);if(R.fx.length>200)R.fx.splice(0,R.fx.length-200);
+  if(R.banner){R.banner.l-=dt;if(R.banner.l<=0)R.banner=null;}if(R.shake>0)R.shake=Math.max(0,R.shake-dt*30);}
+function coopGuestEnd(s,lost){if(R.over)return;R.over=true;clearInterval(CN.sendT);NET.state='idle';netCloseStreams();AU.mode='menu';
+  try{afkInit();S.afk.last=Math.min(Date.now(),S.afk.last+(Date.now()-(S.afk.runStart||Date.now())));S.afk.runStart=0;}catch(e){}
+  const w=s?s.w:R.wave,bk=s?s.bk:R.bossK,k=s?s.k:R.kills;let cupsHtml='';
+  if(!lost){cupsInit();const cOld=S.cups.coop,cd=Math.floor(w/2)+bk*10;S.cups.coopN++;cupsAdd('coop',cd);cupsHtml=cupsGain('coop',cd,cOld);}
+  S.st.kills+=k;save();sfx(lost?'lose':'badge');
+  modal(`<div class="goBox"><div class="goTag">COOPERATIVA ONLINE · CON ${esc(String(NET.opName||'').slice(0,14))}</div><div class="goTitle">${lost?'COLLEGAMENTO PERSO':'PARTITA FINITA'}</div>
+    ${lost?'<div class="small" style="color:#ffd54a">L\'host non risponde più: la partita è stata interrotta.</div>':''}
+    <div class="pvpScore"><div style="color:#5ff1ff"><small>ONDATA</small><b>${w}</b></div><span>·</span><div style="color:#ffb44a"><small>ABBATTUTI</small><b>${k}</b></div></div>${cupsHtml}
+    <button class="b3 red goMain" onclick="hideModal();toMenu('sHome');openCoop()">🤝 Gioca ancora</button><button class="b3 goMain" onclick="hideModal();toMenu('sHome')">🏠 Home</button></div>`);}
+(function coopHooks(){
+  const _up=update;update=function(dt){if(R&&R.cnet==='guest'){try{coopGuestTick(dt);}catch(e){}return;}_up(dt);if(R&&R.cnet==='host'&&!R.over){try{coopHostApply(dt);}catch(e){}}};
+  const _buy=buy;buy=function(id,silent){if(R&&R.cnet==='guest'){const it=SHOP.find(s=>s.id===id);if(!it||R.coins<cost(it))return;rt(`rooms/${NET.room}/buy`,'POST',{id,t:SV}).catch(()=>{});try{sfx('buy');}catch(e){}toast('🛒 '+it.n+' → in arrivo');return;}return _buy(id,silent);};
+  // uscita dalla partita (pausa → esci): avvisa il compagno chiudendo gli invii
+  const _er=endRun;endRun=function(force){if(R&&R.cnet==='guest'&&!R.over){R.over=true;clearInterval(CN.sendT);NET.state='idle';netCloseStreams();return _er(true);}return _er(force);};})();
+
+// ======================= CLASSIFICA PVP IN HOME =======================
+// Il riquadro classifica della Home ha due schede: «Oggi» (campagna) e «PvP» (coppe).
+DLB.tab='day';DLB.pvp=null;DLB.pvpT=0;
+async function dlbLoadPvp(force){if(!force&&DLB.pvp&&Date.now()-DLB.pvpT<60000)return DLB.pvp;try{await lbSubmit('pvp');const l=await lbTop('pvp');DLB.pvp=l.map(p=>({uid:p.uid,name:p.name,wave:p.cups}));DLB.pvpT=Date.now();DLB.perr=0;}catch(e){DLB.perr=1;}return DLB.pvp;}
+function dlbSetTab(t,ev){if(ev)ev.stopPropagation();DLB.tab=t;try{sfx('click');}catch(e){}if(t==='pvp')dlbLoadPvp().then(dlbCard);dlbCard();}
+(function(){const _card=dlbCard;dlbCard=function(){if(DLB.tab!=='pvp'){_card();const c=$('dlbCard');if(c&&!c.querySelector('.dlbTabs'))c.querySelector('.dlbHead').insertAdjacentHTML('afterend',dlbTabsHtml());return;}
+    let c=$('dlbCard');if(!c){_card();c=$('dlbCard');if(!c)return;}cupsInit();const L=DLB.pvp,myI=L?L.findIndex(p=>p.uid===FB.uid):-1,lg=league(S.cups.pvp);
+    let body;if(!L)body=`<div class="dlbEmpty">${DLB.perr?dlbErrMsg(1):'<span class="dlbSpin"></span> Caricamento…'}</div>`;else if(!L.length)body=`<div class="dlbEmpty">⚔️ Nessuno in classifica PvP.<br><b>Vinci una sfida online e prendi il primo posto!</b></div>`;else body=dlbPodium(L).replace(/🌊/g,'🏆')+(myI>2?dlbRow(L[myI],myI).replace('<small>ONDATA</small>','<small>COPPE</small>'):'');
+    c.innerHTML=`<div class="dlbGlow"></div><div class="dlbHead"><div class="dlbTitle"><span class="dlbTro">⚔️</span><div><b>CLASSIFICA PVP</b><small>Coppe vinte nelle sfide online</small></div></div><span class="dlbT">${lg.ic} ${lg.n}</span></div>${dlbTabsHtml()}${body}
+      <div class="dlbFoot"><div class="dlbStat"><small>LE TUE COPPE</small><b>🏆 ${fmt(S.cups.pvp)}</b></div><div class="dlbStat"><small>POSIZIONE</small><b>${myI>=0?'#'+(myI+1):'—'}</b></div><div class="dlbMore">Vedi tutti ›</div></div>`;
+    c.onclick=()=>DLB.tab==='pvp'?openLb('pvp'):openDailyLb();};})();
+function dlbTabsHtml(){return `<div class="dlbTabs"><button class="${DLB.tab!=='pvp'?'on':''}" onclick="dlbSetTab('day',event)">🌊 Oggi</button><button class="${DLB.tab==='pvp'?'on':''}" onclick="dlbSetTab('pvp',event)">⚔️ PvP</button></div>`;}
 
 </script>
 </body>
