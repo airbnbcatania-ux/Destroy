@@ -4528,7 +4528,7 @@ function dlbSetTab(t,ev){if(ev)ev.stopPropagation();DLB.tab=t;try{sfx('click');}
 function dlbTabsHtml(){return `<div class="dlbTabs"><button class="${DLB.tab!=='pvp'?'on':''}" onclick="dlbSetTab('day',event)">🌊 Oggi</button><button class="${DLB.tab==='pvp'?'on':''}" onclick="dlbSetTab('pvp',event)">⚔️ PvP</button></div>`;}
 
 // ======================= v1.7 · VERSIONE DEL GIOCO =======================
-const GAME_VER='1.7.0',GAME_BUILD='24.11.2026';
+const GAME_VER='1.8.0',GAME_BUILD='25.11.2026';
 // ======================= CAMPAGNA CON TRAMA: capitoli, missioni, briefing e debriefing =======================
 // 3 capitoli (uno per galassia) da 5 missioni. Ogni missione ha un obiettivo da completare in una sola partita.
 // Stato salvato in S.camp = {i: indice missione corrente, done:{id:1}, deb: id del debriefing da mostrare, init:1}
@@ -4740,6 +4740,8 @@ function homeExtras(){const p=accProv(),a=$('hAcc'),b=$('hAvB');
 // ======================= CASELLA DI POSTA (comunicazioni alla comunità) =======================
 // Messaggi locali + messaggi dal server (Firestore: collezione "news", campi t, b, ic, ts, nuc, frag).
 const MAIL_LOCAL=[
+ {id:'p180',ic:'⚔️',t:'Novità della versione 1.8',from:"NABBINATOR'S STUDIO",ts:'2026-11-25b',
+  b:"• 🛡 Fazioni: scegli tra Ordine del Nucleo, Legione della Fucina e Figli del Vuoto\n• 🏰 Gilde online: solo membri della tua fazione, livelli, chat e vantaggi giornalieri\n• 🔥 Fenice, Leviatano e Sovrano completamente ridisegnati (ora acquistabili anche con i nuclei)\n• 🌑 Nuova skin Mitica ECLISSE\n• 🪪 Nuova carta del giocatore con stendardi, cornici e titoli"},
  {id:'w17',ic:'🎁',t:'Benvenuto, Custode!',from:"NABBINATOR'S STUDIO",ts:'2026-11-24',nuc:3,
   b:"Grazie per difendere il Nucleo insieme a noi!\n\nIn questa casella riceverai le comunicazioni della comunità: novità, eventi, manutenzioni e regali.\n\nEcco un piccolo regalo di benvenuto per iniziare: 3 nuclei ✦."},
  {id:'p170',ic:'🆕',t:'Novità della versione 1.7',from:"NABBINATOR'S STUDIO",ts:'2026-11-24',
@@ -4816,15 +4818,16 @@ function profRender(){profLayout();const L=level(),got=BADGES.filter(b=>S.badges
    <div class="phTitle">« ${got.length?got[got.length-1].n:'Recluta'} »</div>
    <div class="phXp"><div><i style="width:${100*L.cur/L.need}%"></i></div><small>Livello ${L.lv} · ${fmt(L.cur)} / ${fmt(L.need)} XP</small></div>
    <div class="phChips"><div><b style="color:${lg.c}">🏆 ${fmt(c)}</b><small>Coppe PvP</small></div><div><b>🌊 ${bw}</b><small>Miglior ondata</small></div><div><b>📖 ${Object.keys(cs.done).length}/${CAMP.length}</b><small>Campagna</small></div><div><b>🏅 ${got.length}</b><small>Badge</small></div></div>`;}
-  const a=$('profAcc');if(a){const p=accProv(),ai=acctInfo(),last=+localStorage.getItem('destroy_cs')||0;
+  profAccRender();
+  const v=$('profVer');if(v)v.innerHTML=`<b>DESTROY: battili tutti!</b><span>Versione ${GAME_VER} · build ${GAME_BUILD}</span><small>© NABBINATOR'S STUDIO</small>`;}
+function profAccRender(){const a=$('profAcc');if(a){const p=accProv(),ai=acctInfo(),last=+localStorage.getItem('destroy_cs')||0;
    a.innerHTML=p?`<div class="paHead"><span class="paIc ${p}">${PROV[p].ic}</span><div><small>ACCOUNT COLLEGATO</small><b>${PROV[p].n}</b><i>${esc(ai.email||ai.name||'')}</i></div><span class="paOk">☁️</span></div>
      <div class="paNote">✅ Progressi salvati nel cloud${last?' · ultimo salvataggio '+new Date(last).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</div>
      <div class="paRow"><button class="paB" onclick="accSaveNow()">☁️ Salva ora</button><button class="paB ghost" onclick="accLogoutAsk()">Esci</button></div>`
     :`<div class="paHead"><span class="paIc guest">👤</span><div><small>PROFILO OSPITE</small><b>Progressi solo su questo telefono</b><i>Collega un account per non perderli mai</i></div></div>
      <button class="paLogin g" onclick="oauthStart('google')"><span class="pvG">G</span>Accedi con Google</button>
      <button class="paLogin f" onclick="oauthStart('facebook')"><span class="pvF">f</span>Accedi con Facebook</button>
-     <button class="paLogin e" onclick="openAccount()"><span class="pvE">✉</span>Usa la tua email</button>`;}
-  const v=$('profVer');if(v)v.innerHTML=`<b>DESTROY: battili tutti!</b><span>Versione ${GAME_VER} · build ${GAME_BUILD}</span><small>© NABBINATOR'S STUDIO</small>`;}
+     <button class="paLogin e" onclick="openAccount()"><span class="pvE">✉</span>Usa la tua email</button>`;}}
 (function(){const _rp=renderProfile;renderProfile=function(){_rp.apply(this,arguments);try{profRender();}catch(e){console.error(e);}};})();
 // ======================= PRESTAZIONI =======================
 // 1) la pulsazione a ritmo di musica cambiava una variabile CSS sulla radice del documento a ogni frame
@@ -5087,6 +5090,435 @@ openDailyLb=function(){openLb('day');};
 .lbAr.lock .lbArImg{filter:grayscale(.8) brightness(.6)}
 .lbAr b{display:block;font-size:10.5px;margin-top:4px;line-height:1.2}.lbAr small{font-size:10px;color:var(--lc);font-weight:700}
 .lbSec{font-style:normal;font-size:11px;opacity:.85}
+`;document.head.appendChild(s);})();
+
+// ======================= v1.8 · NAVI SPECIALI RIDISEGNATE + SKIN ECLISSE (150 ✦) =======================
+// Disegno di una nave in un canvas qualsiasi (profilo, anteprime)
+function shipRender(cvp,o){o=o||{};const d=Math.min(2,devicePixelRatio||1),W=Math.max(40,o.w||cvp.clientWidth),H=Math.max(40,o.h||cvp.clientHeight);
+  if(cvp.width!==Math.round(W*d)||cvp.height!==Math.round(H*d)){cvp.width=Math.round(W*d);cvp.height=Math.round(H*d);}
+  const og=g,old={...CAM},oR=R,osx=shX,osy=shY;g=cvp.getContext('2d');g.setTransform(1,0,0,1,0,0);const w=cvp.width,h=cvp.height;g.clearRect(0,0,w,h);
+  R=null;shX=shY=0;const sc=Math.min(w/420,h/300)*(o.z||1);CAM.SX=w/2;CAM.SY=h*(o.cy||0.64);CAM.F=585*2.5*sc;
+  try{drawTower(o.a==null?-0.6:o.a,'#5ff1ff',false,0,o.t||1,{shots:3,aim:o.a==null?-0.6:o.a,hpLv:15,skin:o.skin||S.skin,model:o.model||S.model||'stealth',noPad:o.noPad});}catch(e){}
+  Object.assign(CAM,old);R=oR;shX=osx;shY=osy;g=og;}
+(function(){
+const FIRE=['#fff6d0','#ffe27a','#ffb020','#ff7a1a','#ff3d1a','#c8102e'];
+const set=(id,o)=>{const m=MODELS.find(x=>x.id===id);if(m)Object.assign(m,o);};
+// ---- FENICE: uccello di fuoco con ali di piume che battono, coda di fiamme, cresta e cuore incandescente ----
+set('phoenix',{d:'Uccello di fuoco immortale',nose:24,draw:P=>{const{fh,acc,od,t}=P,fl=Math.sin(t*4.2);
+  {const p=proj(P.TPX,fh-3,P.TPY);g.save();g.globalCompositeOperation='lighter';const gr=g.createRadialGradient(p[0],p[1],0,p[0],p[1],52*p[2]);gr.addColorStop(0,'rgba(255,170,60,.5)');gr.addColorStop(0.5,'rgba(255,80,20,.18)');gr.addColorStop(1,'rgba(255,40,0,0)');g.fillStyle=gr;g.beginPath();g.ellipse(p[0],p[1],52*p[2],34*p[2],0,0,7);g.fill();g.restore();}
+  // coda: tre scie di fiamme ondeggianti
+  for(const s of [-1,0,1])for(let i=11;i>=0;i--){const k=i/12,wv=Math.sin(t*5-i*0.55)*(1.5+i*0.7),p=P.Lp(-12-i*4.3,s*(1.5+i*1.9)+wv*(s?1:0.6));orb(p[0],fh+1.5+Math.sin(t*3+i)*1.2,p[1],(s?2.6:3.2)*(1-k*0.75)+0.4,FIRE[Math.min(5,1+(i>>1))],true);}
+  // ali: 7 piume per lato, a ventaglio, che battono
+  const FEA=[[1,0],[0.35,0.24],[-0.6,0.16],[-1,0],[-0.6,-0.16],[0.35,-0.24]];
+  for(const sd of [1,-1])for(let k=6;k>=0;k--){const a=sd*(1.25+k*0.2+fl*(0.18+k*0.035)),len=11+k*2.4-(k>4?(k-4)*2:0),bx=1-k*1.6,by=sd*(4+k*0.6);
+    const cx=bx+Math.cos(a)*len*0.95,cy=by+Math.sin(a)*len*0.95,p=P.Lp(cx,cy);
+    prism(p[0],p[1],fh+0.6+k*0.25+Math.abs(fl)*0.8,1.3,FEA,len,P.ar+a,od?'#ffcf3a':FIRE[Math.min(5,1+(k>>1))],1,'#fff6d0',0.75);
+    if(k%2===0){const tp=P.Lp(bx+Math.cos(a)*len*1.85,by+Math.sin(a)*len*1.85);orb(tp[0],fh+1.5+k*0.25,tp[1],1.3,'#ffe27a',true);}}
+  // braccia delle ali
+  for(const sd of [1,-1]){const p=P.Lp(1,sd*9);prism(p[0],p[1],fh+2.2,1.6,[[1,0],[0,0.18],[-1,0],[0,-0.18]],9,P.ar+sd*1.35+sd*fl*0.18,'#fff3c0',1,'#ffffff',0.7);}
+  // corpo, collo, testa, becco
+  mPart(P,-1,0,fh+1,4,[[1.5,0],[0.7,0.34],[-0.6,0.3],[-1.2,0],[-0.6,-0.3],[0.7,-0.34]],12,od?'#ffcf3a':'#ff8a1f','#fff3c0',0.72);
+  mPart(P,0,0,fh+5,2.5,[[1.3,0],[0.4,0.3],[-0.9,0.2],[-0.9,-0.2],[0.4,-0.3]],9,'#ffc23a','#fff6d0',0.6);
+  mPart(P,13,0,fh+5.5,3.6,[[1.3,0],[0.4,0.55],[-0.9,0.45],[-0.9,-0.45],[0.4,-0.55]],4.6,'#ffd54a','#fff6d0',0.6);
+  mPart(P,18.6,0,fh+6.8,1.4,[[1,0],[-1,0.42],[-1,-0.42]],2.8,'#fff6d0','#ffffff',0.4);
+  for(const sd of [1,-1]){const e=P.Lp(14.2,sd*2.2);orb(e[0],fh+8.4,e[1],1,acc,true);}
+  // cresta di fiamme
+  for(let i=0;i<4;i++){const p=P.Lp(10.5-i*2.4,0),hh=fh+10+i*1.6+Math.sin(t*9+i*1.7)*1.4;orb(p[0],hh,p[1],2.2-i*0.35,i<2?'#fff6d0':'#ffb020',true);}
+  // cuore e braci che salgono
+  {const p=P.Lp(1,0);orb(p[0],fh+7,p[1],3.4+Math.sin(t*6)*0.5,'#fff6d0',true);}
+  for(let i=0;i<7;i++){const k=(t*0.7+i/7)%1,a=i*2.4,p=P.Lp(Math.cos(a)*14*(1-k*0.4),Math.sin(a)*20*(1-k*0.4));g.save();g.globalAlpha=1-k;orb(p[0],fh+4+k*34,p[1],1.5*(1-k)+0.4,k<0.4?'#ffe27a':'#ff5a1a',true);g.restore();}}});
+// ---- LEVIATANO: serpente degli abissi corazzato che ondeggia, con pinne dorsali, luci bioluminescenti e fauci ----
+set('leviathan',{d:'Serpente corazzato degli abissi',nose:26,draw:P=>{const{fh,c,acc,od,t}=P,N=8,ST=7,W=[];
+  for(let i=0;i<=N;i++)W.push(Math.sin(t*2.6-i*0.72)*(0.6+i*0.62));
+  const DOR=[[1,0],[-1,0.16],[-1,-0.16]],HEX=ngon(6);
+  // pinna caudale
+  {const dx=13-N*ST,ang=Math.atan2(W[N-1]-W[N],ST);for(const sd of [1,-1]){const p=P.Lp(dx-5,W[N]+sd*3);prism(p[0],p[1],fh+1,1.4,[[1,0],[0.2,0.3],[-1,0.12],[-1,-0.12],[0.2,-0.3]],12,P.ar+ang+Math.PI+sd*0.55+Math.sin(t*2.6)*0.2,c[1],1,acc,0.8);}}
+  for(let i=N;i>=1;i--){const dx=13-i*ST,wz=W[i],ang=Math.atan2(W[i-1]-wz,ST),r=10-i*0.7,p=P.Lp(dx,wz);
+    prism(p[0],p[1],fh-1,4.5,HEX,r,P.ar+ang,od?'#ffcf3a':(i%2?c[0]:c[1]),1,acc+'88',0.85);
+    prism(p[0],p[1],fh+2.5,1.8,HEX,r*0.72,P.ar+ang,c[2],1,'#ffffff55',0.8);
+    const q=P.Lp(dx+1,wz);prism(q[0],q[1],fh+4.3,8-i*0.55,DOR,r*0.6,P.ar+ang,c[0],1,acc,0.08);
+    const on=0.5+0.5*Math.sin(t*5-i*0.9);for(const sd of [1,-1]){const s2=P.Lp(dx,wz+sd*r*0.82);g.save();g.globalAlpha=0.35+on*0.65;orb(s2[0],fh+1.5,s2[1],1.2+on*0.6,acc,true);g.restore();}}
+  // pinne pettorali che remano
+  for(const sd of [1,-1]){const p=P.Lp(10,W[0]+sd*12);prism(p[0],p[1],fh,1.6,[[1,0],[0.3,0.35],[-1,0.2],[-1,-0.2],[0.3,-0.35]],10,P.ar+sd*(2.1+Math.sin(t*3.2)*0.35),c[1],1,acc,0.75);}
+  // testa: cranio, mandibola che si apre, corna, occhi
+  const jaw=0.5+0.5*Math.sin(t*1.7),HD=[[1.5,0],[0.9,0.55],[-0.5,0.72],[-1,0.42],[-1,-0.42],[-0.5,-0.72],[0.9,-0.55]];
+  mPart(P,22+jaw*1.6,0,fh-2.5,2.6,[[1.3,0],[0.6,0.5],[-1,0.55],[-1,-0.55],[0.6,-0.5]],7.5,c[0],acc+'99',0.8);
+  {const m=P.Lp(26,0);orb(m[0],fh,m[1],2.6+jaw*1.8,acc,true);}
+  mPart(P,19,0,fh,5.5,HD,10.5,od?'#ffcf3a':c[1],acc+'aa',0.78);mPart(P,18,0,fh+5.5,2,HD,7.6,c[2],'#ffffff66',0.7);
+  for(const sd of [1,-1]){const h1=P.Lp(13,sd*6);prism(h1[0],h1[1],fh+6.5,2.2,[[1,0],[-1,0.25],[-1,-0.25]],8,P.ar+Math.PI+sd*0.45,'#e8e0d0',1,'#ffffff',0.3);
+    const e=P.Lp(24,sd*4.4);orb(e[0],fh+6.4,e[1],1.8,acc,true);}}});
+// ---- SOVRANO: trono di cristallo vivente con guglia, corona di frammenti orbitanti, aureola e riflessi prismatici ----
+set('sovereign',{d:'Trono di cristallo vivente',nose:26,draw:P=>{const{fh,acc,od,t}=P,DIA=POLY.diamond;
+  {const p=proj(P.TPX,fh-3,P.TPY);g.save();g.globalCompositeOperation='lighter';const gr=g.createRadialGradient(p[0],p[1],0,p[0],p[1],46*p[2]);gr.addColorStop(0,acc+'55');gr.addColorStop(1,acc+'00');g.fillStyle=gr;g.beginPath();g.ellipse(p[0],p[1],46*p[2],28*p[2],0,0,7);g.fill();g.restore();}
+  prism(P.TPX,P.TPY,fh-3,2.5,ngon(6),17,t*0.25,'#1a2a3a',1,acc,0.85);
+  mPart(P,0,0,fh,4,[[1.7,0],[0.3,0.58],[-1.1,0.5],[-1.4,0],[-1.1,-0.5],[0.3,-0.58]],15,od?'#ffcf3a':'#dff6ff','#ffffff',0.6);
+  for(const sd of [1,-1]){mPart(P,-4,sd*17,fh+1,2.6,[[1,0],[0.1,0.3],[-1,0],[0.1,-0.3]],15,'#bff4ff','#ffffff',0.3,sd*0.55);
+    mPart(P,6,sd*10,fh+2,7,DIA,3,acc,'#ffffff',0.05,t*0.8*sd);}
+  // guglia centrale con nucleo
+  prism(P.TPX,P.TPY,fh+4,28,DIA,6,t*0.6,'#f4fdff',1,acc,0);
+  prism(P.TPX,P.TPY,fh+4,9,DIA,7,-t*0.4,'#e8fbff',1,acc,0.4);
+  orb(P.TPX,fh+9,P.TPY,2.2+Math.sin(t*4)*0.4,'#ffffff',true);
+  // corona di 6 frammenti prismatici
+  for(let i=0;i<6;i++){const a=t*0.7+i*Math.PI/3,x=P.TPX+Math.cos(a)*22,y=P.TPY+Math.sin(a)*22,hh=fh+9+Math.sin(t*2+i)*2.5;prism(x,y,hh,10,DIA,3,a+t,hsl(i*60+t*40,90,78),1,'#ffffff',0);}
+  // aureola con rune
+  {const hh=fh+36+Math.sin(t*2)*1.5;g.save();g.globalCompositeOperation='lighter';groundCircle(P.TPX,P.TPY,10,hh,'#fff2c0','rgba(255,240,190,.12)',2.4,40);g.setLineDash([3,5]);g.lineDashOffset=-t*20;groundCircle(P.TPX,P.TPY,14,hh+1,acc,null,1.3,40);g.restore();
+   for(let i=0;i<6;i++){const a=-t*0.9+i*Math.PI/3;orb(P.TPX+Math.cos(a)*10,hh+1,P.TPY+Math.sin(a)*10,1.2,'#ffffff',true);}}
+  // riflessi arcobaleno dalla punta
+  {const p0=proj(P.TPX,fh+32,P.TPY);g.save();g.globalCompositeOperation='lighter';g.lineWidth=1.2;for(let i=0;i<5;i++){const a=t*0.5+i*1.256,p1=proj(P.TPX+Math.cos(a)*34,fh+6,P.TPY+Math.sin(a)*34);g.strokeStyle=hsl(i*72+t*60,100,70);g.globalAlpha=0.35+0.3*Math.sin(t*3+i);g.beginPath();g.moveTo(p0[0],p0[1]);g.lineTo(p1[0],p1[1]);g.stroke();}g.restore();}
+  for(const sd of [1,-1])mEngine(P,-19,sd*5,fh+3,5,13);}});
+// le tre navi speciali si possono anche comprare con i nuclei
+const MCOST={phoenix:60,sovereign:90,leviathan:120};
+for(const id in MCOST){const m=MODELS.find(x=>x.id===id);if(!m||m._v18)continue;m._v18=1;const r0=m.req,rt0=m.rt;m.cost=MCOST[id];m.rt0=rt0;
+  m.req=()=>!!(S.modelsOwn&&S.modelsOwn[id])||r0();m.rt=rt0+' · oppure '+MCOST[id]+' ✦';}
+})();
+function buyModel(id){const m=MODELS.find(x=>x.id===id);if(!m||!m.cost)return;if(S.nuc<m.cost){toast('Servono '+m.cost+' ✦');try{openShop();}catch(e){}return;}
+  modal(`<div class="accBox"><div class="small" style="color:#ffb020;font-weight:800;letter-spacing:1px">MODELLO SPECIALE</div><canvas id="bmCv" style="width:240px;height:170px;display:block;margin:0 auto"></canvas><div class="ru" style="font-size:24px">${m.n}</div><p class="small">${m.d}<br>Abilità: <b>${(ABIL[id]||{}).n||''}</b> · ${(ABIL[id]||{}).d||''}</p>
+   <button class="b3 red goMain" onclick="buyModelOk('${id}')">Sblocca per ${m.cost} ✦</button><button class="goLink" onclick="hideModal()">Annulla</button></div>`);
+  const cv=$('bmCv');let a=0;const loop=()=>{if(!cv.isConnected)return;a+=0.012;shipRender(cv,{model:id,a,t:performance.now()/1000,z:1.15,w:240,h:170});requestAnimationFrame(loop);};loop();}
+function buyModelOk(id){const m=MODELS.find(x=>x.id===id);if(!m||S.nuc<m.cost)return;S.nuc-=m.cost;S.modelsOwn=S.modelsOwn||{};S.modelsOwn[id]=1;TW_TRYM=null;hideModal();try{pickModel(id);}catch(e){S.model=id;}save();sfx('badge');toast('🚀 '+m.n+' sbloccata!');renderTower();}
+(function(){const _tb=cuTryBar;cuTryBar=function(){_tb.apply(this,arguments);try{const b=$('cuTry');if(TW_TRYM&&b){const m=MODELS.find(x=>x.id===TW_TRYM);if(m&&m.cost){b.querySelector('small').textContent='🔒 '+m.rt0;const bt=document.createElement('button');bt.className='cuBuy';bt.textContent='Sblocca '+m.cost+' ✦';bt.onclick=()=>buyModel(m.id);b.insertBefore(bt,b.lastElementChild);}}}catch(e){}};})();
+// ---- skin ECLISSE (150 ✦, Mitica): sole nero con corona di fiamme dorate, anello di accrescimento e singolarità ----
+RAR.M={n:'Mitica',c:'#ff3d6e'};
+if(!SKINS.find(k=>k.id==='eclipse')){SKINS.push({id:'eclipse',n:'ECLISSE',c:['#040308','#16110a','#3a2a10'],a:'#ffe2a0',cost:150,rar:'M',fx:'eclipse',e:'🌑'});const k=SKINS[SKINS.length-1];k.req=()=>!!(S.skinsOwn&&S.skinsOwn.eclipse);k.rt='✦ 150';}
+function eclipseFx(t,X,Y,ph){const G='#ffd27a',W='#fff6d8';
+  if(ph==='b'){g.save();g.globalCompositeOperation='lighter';
+    // sole nero alle spalle con corona e raggi
+    const c=proj(X,92,Y+10),r=19*c[2];
+    for(let i=0;i<18;i++){const a=i*Math.PI/9+t*0.15,L=r*(1.5+0.45*Math.sin(t*2.3+i*1.9)),w=0.09;const gr=g.createLinearGradient(c[0],c[1],c[0]+Math.cos(a)*L,c[1]+Math.sin(a)*L);gr.addColorStop(0,'rgba(255,220,140,.55)');gr.addColorStop(1,'rgba(255,140,40,0)');g.fillStyle=gr;
+      g.beginPath();g.moveTo(c[0]+Math.cos(a-w)*r,c[1]+Math.sin(a-w)*r);g.lineTo(c[0]+Math.cos(a)*L,c[1]+Math.sin(a)*L);g.lineTo(c[0]+Math.cos(a+w)*r,c[1]+Math.sin(a+w)*r);g.closePath();g.fill();}
+    {const gr=g.createRadialGradient(c[0],c[1],r*0.9,c[0],c[1],r*1.9);gr.addColorStop(0,'rgba(255,246,216,.95)');gr.addColorStop(0.12,'rgba(255,200,100,.55)');gr.addColorStop(1,'rgba(255,120,30,0)');g.fillStyle=gr;g.beginPath();g.arc(c[0],c[1],r*1.9,0,7);g.fill();}
+    g.globalCompositeOperation='source-over';g.fillStyle='#000';g.beginPath();g.arc(c[0],c[1],r*0.98,0,7);g.fill();
+    g.globalCompositeOperation='lighter';{const a=t*0.8,bx=c[0]+Math.cos(a)*r,by=c[1]+Math.sin(a)*r,gr=g.createRadialGradient(bx,by,0,bx,by,r*0.6);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(0.2,'rgba(255,230,170,.7)');gr.addColorStop(1,'rgba(255,200,100,0)');g.fillStyle=gr;g.beginPath();g.arc(bx,by,r*0.6,0,7);g.fill();}
+    // sigillo a terra
+    g.setLineDash([2,6]);g.lineDashOffset=t*14;groundCircle(X,Y,60,1,G,null,2,72);g.setLineDash([]);groundCircle(X,Y,50,1,'rgba(255,210,122,.5)','rgba(255,190,90,.05)',1.4,72);
+    for(let i=0;i<8;i++){const a=i*Math.PI/4+t*0.2,p=proj(X+Math.cos(a)*55,1,Y+Math.sin(a)*55);g.fillStyle=W;g.globalAlpha=0.8;g.beginPath();g.arc(p[0],p[1],2*p[2],0,7);g.fill();}g.globalAlpha=1;
+    for(let i=0;i<24;i++){const a=t*1.4+i*0.2618;if(Math.sin(a)>0)continue;orb(X+Math.cos(a)*44,24+Math.sin(a)*7,Y+Math.sin(a)*30,1.6,i%3?G:W,true);}
+    g.restore();return;}
+  for(let i=0;i<24;i++){const a=t*1.4+i*0.2618;if(Math.sin(a)<=0)continue;orb(X+Math.cos(a)*44,24+Math.sin(a)*7,Y+Math.sin(a)*30,1.6,i%3?G:W,true);}
+  for(let i=0;i<8;i++){const k=(t*0.6+i/8)%1,a=i*0.785+t,r=48*(1-k);g.save();g.globalAlpha=k;orb(X+Math.cos(a)*r*0.7,90-k*4,Y+10+Math.sin(a)*r*0.3,1.2+k,W,true);g.restore();}
+  if(R&&R.fx&&R.fx.length<380&&Math.random()<0.12)R.fx.push({t:'p',x:X+(Math.random()-.5)*36,y:Y+(Math.random()-.5)*36,h:4,vx:0,vy:0,vh:40,c:Math.random()<0.6?G:W,l:1,m:1,sz:2});}
+(function(){const _sf=skinFx;skinFx=function(sk,t,X,Y,ph){if(sk&&sk.fx==='eclipse'){try{eclipseFx(t,X,Y,ph);}catch(e){}return;}return _sf(sk,t,X,Y,ph);};})();
+
+// ======================= v1.8 · FAZIONI =======================
+// Scelta obbligatoria (una volta sola) all'inizio. Cambio solo a pagamento (50 ✦), mai dentro una gilda.
+// Bonus piccolo e diverso per ogni fazione, così il PvP resta equilibrato.
+const GAME_VER2=GAME_VER;
+const FACS={
+ nucleo:{n:'Ordine del Nucleo',sh:'ORDINE',c:'#45e9ff',c2:'#06324a',m:"Proteggiamo l'ultima luce.",d:'Fedeli al Nucleo dal primo giorno. Tengono la linea dove tutti gli altri cadono.',perk:'Scafo rinforzato',pv:'+6% scafo massimo',k:'hp'},
+ fucina:{n:'Legione della Fucina',sh:'LEGIONE',c:'#ff8a2a',c2:'#4a1404',m:'Forgiati nel fuoco, colpiamo per primi.',d:'Nati nel magma di Sombrero. Per loro la miglior difesa è non lasciare nulla in piedi.',perk:'Cannoni roventi',pv:'+6% danno',k:'dmg'},
+ vuoto:{n:'Figli del Vuoto',sh:'FIGLI',c:'#b06bff',c2:'#22083e',m:"Abbiamo guardato nell'Occhio.",d:'Sopravvissuti al Vortice. Veloci e imprevedibili: usano il Vuoto contro sé stesso.',perk:'Riflessi del Vuoto',pv:'+5% velocità di fuoco',k:'aspd'}};
+const FAC_CHANGE=50;
+function facCrest(id,sz){const f=FACS[id];if(!f)return '';const u='cr'+id+Math.random().toString(36).slice(2,6);
+  const sym={nucleo:`<path d="M50 22 L57.5 45 L80 52 L57.5 59 L50 82 L42.5 59 L20 52 L42.5 45 Z" fill="#fff"/><circle cx="50" cy="52" r="6" fill="${f.c}"/>`,
+    fucina:`<path d="M50 20 C61 35 71 44 67 61 C65 73 57 81 50 81 C40 81 31 73 32 61 C33 52 40 47 42 38 C46 47 48 52 53 55 C55 44 53 33 50 20 Z" fill="#fff"/><path d="M50 52 C55 58 58 63 56 69 C55 73 52 75 50 75 C46 75 43 72 44 67 C45 62 48 60 50 52Z" fill="${f.c}"/>`,
+    vuoto:`<path d="M18 52 Q50 22 82 52 Q50 82 18 52 Z" fill="#fff"/><circle cx="50" cy="52" r="12" fill="${f.c2}"/><circle cx="50" cy="52" r="6" fill="${f.c}"/><circle cx="46" cy="48" r="2.2" fill="#fff"/>`}[id];
+  return `<svg class="crest" width="${sz}" height="${sz*1.06}" viewBox="0 0 100 106"><defs><linearGradient id="${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${f.c}"/><stop offset="1" stop-color="${f.c2}"/></linearGradient></defs>
+   <path d="M50 3 L94 17 V52 C94 79 74 96 50 103 C26 96 6 79 6 52 V17 Z" fill="#0b0716" stroke="#000" stroke-width="3"/>
+   <path d="M50 9 L88 21 V52 C88 75 70 90 50 96 C30 90 12 75 12 52 V21 Z" fill="url(#${u})" stroke="#ffffff55" stroke-width="1.5"/>
+   <path d="M50 9 L88 21 V36 L12 36 V21 Z" fill="#ffffff18"/>${sym}</svg>`;}
+(function(){const _c=calc;calc=function(){const st=_c.apply(this,arguments);try{const f=FACS[S.fac];if(f){if(f.k==='hp'){st.maxHp*=1.06;if(st.shieldMax)st.shieldMax*=1.06;}else if(f.k==='dmg')st.dmg*=1.06;else if(f.k==='aspd')st.aspd=Math.min(12,st.aspd*1.05);}}catch(e){}return st;};})();
+let FACSEL=null;
+function facPick(change){if($('facPick'))return;FACSEL=null;const d=document.createElement('div');d.id='facPick';d.dataset.ch=change?1:'';
+  const ids=Object.keys(FACS).filter(k=>!change||k!==S.fac);
+  d.innerHTML=`<div class="fpTop"><small>${change?'CAMBIO FAZIONE · '+FAC_CHANGE+' ✦':'IL NUCLEO TI CHIAMA'}</small><b>${change?'Scegli la nuova fazione':'Scegli la tua fazione'}</b><p>${change?'Il cambio è immediato. Potrai cambiare di nuovo solo pagando.':'Combatterai al loro fianco e potrai unirti solo alle gilde della tua fazione. La scelta è <u>definitiva</u>.'}</p></div>
+   <div class="fpList">${ids.map(k=>{const f=FACS[k];return `<button class="fpCard" data-k="${k}" style="--fc:${f.c};--fc2:${f.c2}" onclick="facSel('${k}')"><div class="fpCr">${facCrest(k,74)}</div><div class="fpTx"><b>${f.n}</b><i>«${f.m}»</i><p>${f.d}</p><span class="fpPerk">${f.perk} · ${f.pv}</span></div></button>`;}).join('')}</div>
+   <button class="b3 red goMain fpGo" id="fpGo" disabled onclick="facConfirm()">Seleziona una fazione</button>${change?'<button class="goLink" onclick="facClose()">Annulla</button>':''}`;
+  document.body.appendChild(d);try{sfx('big');}catch(e){}}
+function facSel(k){FACSEL=k;sfx('click');document.querySelectorAll('.fpCard').forEach(c=>c.classList.toggle('on',c.dataset.k===k));const b=$('fpGo');b.disabled=false;b.textContent='⚔ Giura fedeltà: '+FACS[k].sh;b.style.setProperty('--fc',FACS[k].c);}
+function facClose(){const d=$('facPick');if(d)d.remove();}
+function facConfirm(){const k=FACSEL,d=$('facPick');if(!k||!d)return;const ch=!!d.dataset.ch;
+  if(ch){if(S.guild&&S.guild.id){toast('Prima lascia la tua gilda');return;}if(S.nuc<FAC_CHANGE){toast('Servono '+FAC_CHANGE+' ✦');return;}S.nuc-=FAC_CHANGE;}
+  S.fac=k;S.facT=Date.now();save();d.remove();sfx('badge');try{buzz([60,40,90]);}catch(e){}
+  const f=FACS[k];modal(`<div class="facWel" style="--fc:${f.c};--fc2:${f.c2}">${facCrest(k,120)}<small>${ch?'NUOVA FAZIONE':'BENVENUTO, CUSTODE'}</small><b>${f.n}</b><i>«${f.m}»</i>
+    <div class="facPerkBig"><span>Bonus di fazione</span><b>${f.perk}</b><em>${f.pv} in ogni partita</em></div>
+    <p class="small">Ora puoi unirti a una <b>gilda</b> della tua fazione dalla Home.</p><button class="b3 red goMain" onclick="hideModal();renderHome()">Avanti</button></div>`);
+  try{renderHome();}catch(e){}}
+function facCheck(){try{if(S.fac||R||!S.introSeen||splashOn||$('facPick'))return;if(curScreen!=='sHome')return;if($('ov').style.display==='flex')return;const it=$('intro');if(it&&it.style.display&&it.style.display!=='none')return;if($('aaa'))return;facPick(false);}catch(e){}}
+setInterval(facCheck,2500);
+function facChangeAsk(){sfx('click');if(S.guild&&S.guild.id){modal(`<div class="accBox"><div style="font-size:40px">🛡</div><div class="ru" style="font-size:20px">Sei in una gilda</div><p class="small">Le gilde accettano solo membri della stessa fazione: per cambiare fazione devi prima lasciare <b>${esc(S.guild.n)}</b>.</p><button class="b3 goMain" onclick="hideModal()">Ok</button></div>`);return;}
+  hideModal();facPick(true);}
+
+// ======================= v1.8 · GILDE ONLINE =======================
+// Firestore: guilds/{gid} {n,tag,fac,em,col,desc,xp,lv,mc,own,ownN,t}
+//            guilds/{gid}/m/{uid} {n,pl,r,xp,j,a}     guilds/{gid}/c/{id} {n,uid,tx,r,t}
+// Solo membri della stessa fazione. La gilda sale di livello fuori dalla battaglia (presenze e donazioni)
+// e i vantaggi sono solo economici (raccolta AFK, forziere, posti): nessun potere extra in partita.
+const FSN=`projects/${FB_CFG.projectId}/databases/(default)/documents`;
+const fsv=v=>typeof v==='number'?(Number.isInteger(v)?{integerValue:String(v)}:{doubleValue:v}):typeof v==='boolean'?{booleanValue:v}:{stringValue:String(v)};
+const fsObj=o=>{const f={};for(const k in o)f[k]=k==='t'||k==='j'||k==='a'?{timestampValue:o[k]}:fsv(o[k]);return f;};
+const fsDoc=d=>{const o={},f=(d&&d.fields)||{};for(const k in f){const x=f[k];o[k]=x.integerValue!=null?+x.integerValue:x.doubleValue!=null?+x.doubleValue:x.booleanValue!=null?x.booleanValue:x.timestampValue||x.stringValue||'';}o._id=d&&d.name?d.name.split('/').pop():'';return o;};
+const fsPatch=(path,o)=>fsReq(path+'?'+Object.keys(o).map(k=>'updateMask.fieldPaths='+k).join('&'),{method:'PATCH',body:JSON.stringify({fields:fsObj(o)})});
+const fsInc=(path,o)=>fsReq(':commit',{method:'POST',body:JSON.stringify({writes:[{transform:{document:FSN+path,fieldTransforms:Object.keys(o).map(k=>({fieldPath:k,increment:fsv(o[k])}))}}]})});
+const fsDel=path=>fsReq(path,{method:'DELETE'});
+async function fsList(parent,coll,where,order,limit){const q={from:[{collectionId:coll}],limit:limit||50};if(where)q.where={fieldFilter:{field:{fieldPath:where[0]},op:'EQUAL',value:fsv(where[1])}};if(order)q.orderBy=[{field:{fieldPath:order[0]},direction:order[1]||'DESCENDING'}];
+  const res=await fsReq((parent||'')+':runQuery',{method:'POST',body:JSON.stringify({structuredQuery:q})});return res.filter(x=>x.document).map(x=>fsDoc(x.document));}
+const G_EMB=['⚔️','🛡️','🔥','💠','🌀','🐉','👑','☄️','🦅','💀','⚡','🌙'];
+const G_COL=['#45e9ff','#ff8a2a','#b06bff','#ff3d6e','#7dff6a','#ffd54a','#ffffff','#4a7aff'];
+const G_MAX=20,G_CREATE=10;
+const gNeed=l=>Math.round(500*Math.pow(l,1.5));// xp per passare da l a l+1
+function gLvl(xp){let l=1,acc=0;while(l<G_MAX&&xp>=acc+gNeed(l)){acc+=gNeed(l);l++;}return {lv:l,cur:xp-acc,need:l<G_MAX?gNeed(l):1};}
+const gCap=lv=>Math.min(50,10+lv*2);
+const G_PERKS=[{lv:2,ic:'📦',t:'Raccolta AFK +5%'},{lv:3,ic:'🎁',t:'Forziere giornaliero più ricco'},{lv:4,ic:'📦',t:'Raccolta AFK +10%'},{lv:5,ic:'✦',t:'Forziere: +1 nucleo al giorno'},
+ {lv:7,ic:'📦',t:'Raccolta AFK +15%'},{lv:8,ic:'⏱',t:'Capienza AFK +30 minuti'},{lv:10,ic:'✦',t:'Forziere: +2 nuclei al giorno'},{lv:12,ic:'📦',t:'Raccolta AFK +20%'},
+ {lv:15,ic:'✦',t:'Forziere: +3 nuclei al giorno'},{lv:18,ic:'📦',t:'Raccolta AFK +25%'},{lv:20,ic:'👑',t:'Stendardo di gilda leggendario'}];
+const gAfkB=lv=>lv>=18?0.25:lv>=12?0.2:lv>=7?0.15:lv>=4?0.1:lv>=2?0.05:0;
+const gChestN=lv=>lv>=15?3:lv>=10?2:lv>=5?1:0;
+let GD={g:null,me:null,mem:[],chat:[],tab:'home',list:null,t:0,poll:null,busy:false};
+const gToday=()=>{const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();};
+function gDay(){if(!S.gday||S.gday.d!==gToday())S.gday={d:gToday(),chk:0,don:0,nd:0,ch:0};return S.gday;}
+const gMyLv=()=>S.guild&&S.guild.id?(S.guild.lv||1):0;
+// vantaggi economici
+(function(){const _r=afkRate;afkRate=function(){return _r.apply(this,arguments)*(1+gAfkB(gMyLv()));};const _c=afkCap;afkCap=function(){return _c.apply(this,arguments)+(gMyLv()>=8?30:0);};})();
+const gDonCost=()=>Math.max(200,Math.round(afkRate()*20));
+// ---- schermata ----
+function gScreen(){let s=$('sGuild');if(!s){s=document.createElement('div');s.id='sGuild';s.className='screen';document.querySelector('.screen').parentNode.appendChild(s);}return s;}
+async function openGuild(){if(!S.fac){facPick(false);return;}sfx('click');gScreen();go('sGuild');gRender();await gRefresh();}
+(function(){const _go=go;go=function(id){const r=_go.apply(this,arguments);if(id!=='sGuild'){clearInterval(GD.poll);GD.poll=null;}return r;};})();
+async function gRefresh(){if(GD.busy)return;GD.busy=true;try{
+  if(S.guild&&S.guild.id){const gid=S.guild.id;let g;try{g=fsDoc(await fsReq('/guilds/'+gid));}catch(e){if(String(e.message).indexOf('404')>=0){gGone('La gilda è stata sciolta.');return;}throw e;}
+    let me;try{me=fsDoc(await fsReq('/guilds/'+gid+'/m/'+FB.uid));}catch(e){if(String(e.message).indexOf('404')>=0){gGone('Non fai più parte di '+g.n+'.');return;}throw e;}
+    GD.g=g;GD.me=me;const L=gLvl(g.xp||0);S.guild={id:gid,n:g.n,tag:g.tag,em:g.em,col:g.col,lv:L.lv};save();
+    GD.mem=(await fsList('/guilds/'+gid,'m',null,['xp'],60));gChatLoad();
+    fsPatch('/guilds/'+gid+'/m/'+FB.uid,{n:S.prof.name,pl:level().lv,a:fsNow()}).catch(()=>{});
+    if(!GD.poll)GD.poll=setInterval(()=>{if(curScreen==='sGuild'&&GD.tab==='chat')gChatLoad();},4000);}
+  else{GD.list=(await fsList('','guilds',['fac',S.fac],null,60)).sort((a,b)=>(b.xp||0)-(a.xp||0));}
+  GD.err='';}catch(e){GD.err='📡 Server non raggiungibile. Riprova tra poco.';}finally{GD.busy=false;if(curScreen==='sGuild')gRender();}}
+function gGone(msg){S.guild=null;save();GD.g=null;GD.busy=false;toast('🛡 '+msg);gRefresh();}
+const gCrest=(em,col,sz)=>`<div class="gCrest" style="--gc:${G_COL[col]||G_COL[0]};width:${sz}px;height:${sz*1.1}px;font-size:${sz*0.46}px"><span>${G_EMB[em]||G_EMB[0]}</span></div>`;
+function gRender(){const s=gScreen();const f=FACS[S.fac]||FACS.nucleo;s.style.setProperty('--fc',f.c);
+  const head=`<div class="gTopBar"><button class="gBack" onclick="go('sHome')">‹</button><div class="gTT"><small>${f.n.toUpperCase()}</small><b>Gilda</b></div>${facCrest(S.fac,34)}</div>`;
+  if(!(S.guild&&S.guild.id)){const L=GD.list;
+    s.innerHTML=head+`<div class="gHero none"><div class="gHeroTx"><b>Unisciti a una gilda</b><p>Combatti con i Custodi della tua fazione, fai salire di livello la gilda con presenze e donazioni e sblocca vantaggi per tutti.</p></div></div>
+     <div class="gRow2"><input id="gSearch" placeholder="Cerca per nome o sigla…" oninput="gRender2()"><button class="gNew" onclick="gCreateForm()">＋ Crea</button></div>
+     <div id="gList" class="gList"></div>`;gRender2();return;}
+  const g=GD.g;if(!g){s.innerHTML=head+`<div class="gList"><div class="dlbEmpty">${GD.err||'<span class="dlbSpin"></span> Caricamento della gilda…'}</div></div>`;return;}
+  const L=gLvl(g.xp||0),boss=g.own===FB.uid,dd=gDay();
+  s.innerHTML=head+`<div class="gHero" style="--gc:${G_COL[g.col]||G_COL[0]}">${gCrest(g.em,g.col,78)}<div class="gHeroTx"><small>[${esc(g.tag)}] · ${g.mc||GD.mem.length}/${gCap(L.lv)} membri</small><b>${esc(g.n)}</b>
+     <div class="gLv"><span>LV ${L.lv}</span><div><i style="width:${L.lv>=G_MAX?100:100*L.cur/L.need}%"></i></div><em>${L.lv>=G_MAX?'MAX':fmt(L.cur)+'/'+fmt(L.need)}</em></div></div></div>
+   <div class="gTabs">${[['home','🏠 Gilda'],['chat','💬 Chat'],['mem','👥 Membri']].map(([k,n])=>`<button class="${GD.tab===k?'on':''}" onclick="GD.tab='${k}';gRender();${k==='chat'?'gChatLoad()':''}">${n}</button>`).join('')}</div>
+   <div class="gBody">${GD.tab==='home'?gHomeHtml(g,L,dd,boss):GD.tab==='chat'?gChatHtml():gMemHtml(g,boss)}</div>`;
+  if(GD.tab==='chat'){const b=s.querySelector('.gChat');if(b)b.scrollTop=b.scrollHeight;}}
+function gRender2(){const el=$('gList');if(!el)return;if(GD.err){el.innerHTML=`<div class="dlbEmpty">${GD.err}</div>`;return;}if(!GD.list){el.innerHTML='<div class="dlbEmpty"><span class="dlbSpin"></span> Cerco le gilde della tua fazione…</div>';return;}
+  const q=(($('gSearch')||{}).value||'').toLowerCase(),L=GD.list.filter(g=>!q||String(g.n).toLowerCase().includes(q)||String(g.tag).toLowerCase().includes(q));
+  el.innerHTML=L.length?L.map(g=>{const lv=gLvl(g.xp||0).lv,full=(g.mc||0)>=gCap(lv);return `<div class="gItem">${gCrest(g.em,g.col,46)}<div class="gIt"><b>${esc(g.n)} <small>[${esc(g.tag)}]</small></b><span>LV ${lv} · ${g.mc||0}/${gCap(lv)} membri</span>${g.desc?`<i>${esc(g.desc)}</i>`:''}</div><button ${full?'disabled':''} onclick="gJoin('${g._id}')">${full?'Piena':'Entra'}</button></div>`;}).join('')
+   :`<div class="dlbEmpty">${q?'Nessuna gilda trovata.':'Nessuna gilda nella tua fazione: fondane una tu!'}</div>`;}
+function gHomeHtml(g,L,dd,boss){const cost=gDonCost(),chest=Math.round(afkRate()*30*(1+L.lv*0.1)),cn=gChestN(L.lv);
+  return `${g.desc?`<div class="gDesc">${esc(g.desc)}</div>`:''}
+   <div class="gSec">Attività di oggi <small>fanno salire di livello la gilda</small></div>
+   <div class="gActs">
+    <button class="gAct ${dd.chk?'done':''}" ${dd.chk?'disabled':''} onclick="gCheckIn()"><span>📍</span><b>Presenza</b><small>${dd.chk?'Fatto ✓':'Gratis · +40 XP'}</small></button>
+    <button class="gAct ${dd.don>=3?'done':''}" ${dd.don>=3?'disabled':''} onclick="gDonate('f')"><span>◇</span><b>Dona frammenti</b><small>${dd.don>=3?'Fatto ✓':fmt(cost)+' ◇ · +60 XP ('+(3-dd.don)+'/3)'}</small></button>
+    <button class="gAct ${dd.nd>=10?'done':''}" ${dd.nd>=10?'disabled':''} onclick="gDonate('n')"><span>✦</span><b>Dona 1 nucleo</b><small>${dd.nd>=10?'Limite raggiunto':'+100 XP ('+(10-dd.nd)+'/10)'}</small></button>
+    <button class="gAct chest ${dd.ch?'done':''}" ${dd.ch?'disabled':''} onclick="gChest()"><span>🎁</span><b>Forziere</b><small>${dd.ch?'Domani ✓':'+'+fmt(chest)+' ◇'+(cn?' +'+cn+' ✦':'')}</small></button>
+   </div>
+   <div class="gSec">Vantaggi di gilda <small>validi fuori dalla battaglia</small></div>
+   <div class="gPerks">${G_PERKS.map(p=>`<div class="gPerk ${L.lv>=p.lv?'on':''}"><span>${p.ic}</span><b>${p.t}</b><em>LV ${p.lv}</em></div>`).join('')}</div>
+   <div class="gBtns">${boss?`<button class="paB" onclick="gEditForm()">✎ Modifica gilda</button>`:''}<button class="paB ghost" onclick="gLeaveAsk()">Lascia la gilda</button></div>`;}
+function gMemHtml(g,boss){const R2={capo:'👑 Capo',vice:'⭐ Vice',membro:'Membro'};
+  return `<div class="gMem">${GD.mem.map((m,i)=>{const me=m._id===FB.uid,on=m.a&&Date.now()-Date.parse(m.a)<600000;return `<div class="gM ${me?'me':''}"><span class="gMp">${i+1}</span><span class="dlbAv" style="--h:${dlbHue(m._id)}">${dlbIni(m.n)}${on?'<i class="gOn"></i>':''}</span>
+    <div class="gMt"><b>${esc(m.n||'Custode')}${me?' <small>TU</small>':''}</b><span>${R2[m.r]||'Membro'} · Lv ${m.pl||1}</span></div><div class="gMx"><b>${fmt(m.xp||0)}</b><small>XP donati</small></div>
+    ${boss&&!me?`<button class="gMb" onclick="gManage('${m._id}')">⋯</button>`:''}</div>`;}).join('')}</div>`;}
+function gChatHtml(){return `<div class="gChat">${GD.chat.length?GD.chat.map(c=>`<div class="gC ${c.uid===FB.uid?'me':''}"><b>${esc(c.n)}</b><p>${esc(c.tx)}</p><small>${c.t?new Date(c.t).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):''}</small></div>`).join(''):'<div class="dlbEmpty">Nessun messaggio. Saluta la tua gilda!</div>'}</div>
+  <div class="gSend"><input id="gMsg" maxlength="160" placeholder="Scrivi alla gilda…" onkeydown="if(event.key==='Enter')gSend()"><button onclick="gSend()">➤</button></div>`;}
+async function gChatLoad(){if(!(S.guild&&S.guild.id))return;try{const L=await fsList('/guilds/'+S.guild.id,'c',null,['t'],40);const nw=L.reverse();const ch=JSON.stringify(nw.map(c=>c._id))!==JSON.stringify(GD.chat.map(c=>c._id));GD.chat=nw;if(ch&&curScreen==='sGuild'&&GD.tab==='chat'){const inp=$('gMsg'),v=inp&&inp.value,foc=inp&&document.activeElement===inp;gRender();const i2=$('gMsg');if(i2){i2.value=v||'';if(foc)i2.focus();}}}catch(e){}}
+async function gSend(){const i=$('gMsg');if(!i)return;const tx=i.value.trim();if(!tx)return;i.value='';try{await fsReq('/guilds/'+S.guild.id+'/c',{method:'POST',body:JSON.stringify({fields:fsObj({n:S.prof.name,uid:FB.uid,tx:tx.slice(0,160),t:fsNow()})})});sfx('click');gChatLoad();}catch(e){toast('Messaggio non inviato');}}
+async function gAddXp(n){const gid=S.guild.id;await fsInc('/guilds/'+gid,{xp:n});await fsInc('/guilds/'+gid+'/m/'+FB.uid,{xp:n});if(GD.g){GD.g.xp=(GD.g.xp||0)+n;const old=S.guild.lv,L=gLvl(GD.g.xp);if(L.lv>old){S.guild.lv=L.lv;fsPatch('/guilds/'+gid,{lv:L.lv}).catch(()=>{});setTimeout(()=>{modal(`<div class="accBox">${gCrest(GD.g.em,GD.g.col,90)}<div class="goTag">LA GILDA È SALITA DI LIVELLO</div><div class="ru" style="font-size:30px">LV ${L.lv}</div><p class="small">${(G_PERKS.find(p=>p.lv===L.lv)||{t:'Più posti per nuovi membri'}).t}</p><button class="b3 red goMain" onclick="hideModal()">Grande!</button></div>`);sfx('badge');},300);}}
+  const me=GD.mem.find(m=>m._id===FB.uid);if(me)me.xp=(me.xp||0)+n;save();gRender();}
+async function gCheckIn(){const d=gDay();if(d.chk)return;d.chk=1;save();try{await gAddXp(40);toast('📍 Presenza registrata · +40 XP gilda');}catch(e){d.chk=0;save();toast('📡 Riprova tra poco');}}
+async function gDonate(k){const d=gDay();if(k==='f'){if(d.don>=3)return;const c=gDonCost();if(S.frag<c){toast('Servono '+fmt(c)+' ◇');return;}S.frag-=c;d.don++;save();try{await gAddXp(60);toast('◇ Donazione inviata · +60 XP gilda');}catch(e){S.frag+=c;d.don--;save();toast('📡 Riprova tra poco');}}
+  else{if(d.nd>=10)return;if(S.nuc<1){toast('Non hai nuclei');return;}S.nuc--;d.nd++;save();try{await gAddXp(100);toast('✦ Donazione inviata · +100 XP gilda');}catch(e){S.nuc++;d.nd--;save();toast('📡 Riprova tra poco');}}
+  try{renderHome();}catch(e){}}
+function gChest(){const d=gDay();if(d.ch)return;const L=gLvl((GD.g&&GD.g.xp)||0),f=Math.round(afkRate()*30*(1+L.lv*0.1)),n=gChestN(L.lv);d.ch=1;S.frag+=f;S.st.fragTot+=f;S.nuc+=n;save();sfx('badge');
+  modal(`<div class="accBox"><div style="font-size:56px">🎁</div><div class="goTag">FORZIERE DI GILDA</div><div class="accOk" style="font-size:18px">+${fmt(f)} ◇${n?' · +'+n+' ✦':''}</div><p class="small">Torna domani per un altro forziere. Più sale la gilda, più è ricco.</p><button class="b3 red goMain" onclick="hideModal()">Ritira</button></div>`);gRender();}
+async function gJoin(gid){const g=(GD.list||[]).find(x=>x._id===gid);if(!g)return;if(g.fac!==S.fac){toast('Questa gilda è di un\'altra fazione');return;}const lv=gLvl(g.xp||0).lv;if((g.mc||0)>=gCap(lv)){toast('Gilda piena');return;}
+  try{await fsPatch('/guilds/'+gid+'/m/'+FB.uid,{n:S.prof.name,pl:level().lv,r:'membro',xp:0,j:fsNow(),a:fsNow()});await fsInc('/guilds/'+gid,{mc:1});
+    S.guild={id:gid,n:g.n,tag:g.tag,em:g.em,col:g.col,lv};save();sfx('badge');toast('🛡 Benvenuto in '+g.n+'!');GD.tab='home';
+    fsReq('/guilds/'+gid+'/c',{method:'POST',body:JSON.stringify({fields:fsObj({n:'⚑ Sistema',uid:'sys',tx:S.prof.name+' è entrato nella gilda!',t:fsNow()})})}).catch(()=>{});gRefresh();}
+  catch(e){toast('📡 Non riesco a entrare, riprova');}}
+let GF={em:0,col:0};
+function gCreateForm(edit){const g=edit&&GD.g;GF={em:g?g.em:Math.floor(Math.random()*G_EMB.length),col:g?g.col:Object.keys(FACS).indexOf(S.fac)};sfx('click');
+  modal(`<div class="gForm"><div class="ru" style="font-size:22px">${edit?'Modifica gilda':'Fonda una gilda'}</div>
+   <div class="gFPrev" id="gFPrev">${gCrest(GF.em,GF.col,70)}</div>
+   <label>Nome<input id="gFn" maxlength="20" value="${g?esc(g.n):''}" placeholder="Es. Guardiani di Andromeda"></label>
+   <label>Sigla (2-4 lettere)<input id="gFt" maxlength="4" value="${g?esc(g.tag):''}" placeholder="GDA" style="text-transform:uppercase"></label>
+   <label>Descrizione<input id="gFd" maxlength="80" value="${g?esc(g.desc||''):''}" placeholder="Attivi ogni giorno, PvP e campagna"></label>
+   <div class="gFl">Emblema</div><div class="gEmb">${G_EMB.map((e,i)=>`<button class="${i===GF.em?'on':''}" onclick="GF.em=${i};gFUpd(this,'.gEmb')">${e}</button>`).join('')}</div>
+   <div class="gFl">Colore</div><div class="gCol">${G_COL.map((c,i)=>`<button class="${i===GF.col?'on':''}" style="background:${c}" onclick="GF.col=${i};gFUpd(this,'.gCol')"></button>`).join('')}</div>
+   <button class="b3 red goMain" onclick="${edit?'gEditSave()':'gCreate()'}">${edit?'Salva':'Fonda per '+G_CREATE+' ✦'}</button><button class="goLink" onclick="hideModal()">Annulla</button></div>`);}
+function gFUpd(b,sel){document.querySelectorAll(sel+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('gFPrev').innerHTML=gCrest(GF.em,GF.col,70);sfx('click');}
+function gEditForm(){gCreateForm(true);}
+function gFVals(){const n=($('gFn').value||'').trim(),tag=($('gFt').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,''),desc=($('gFd').value||'').trim();
+  if(n.length<3){toast('Nome troppo corto');return null;}if(tag.length<2){toast('Sigla di almeno 2 lettere');return null;}return {n,tag,desc};}
+async function gCreate(){const v=gFVals();if(!v)return;if(S.nuc<G_CREATE){toast('Servono '+G_CREATE+' ✦');return;}
+  try{await fbAuth();const gid=(v.tag+'-'+Math.random().toString(36).slice(2,8)).toLowerCase();
+    await fsPatch('/guilds/'+gid,{n:v.n,tag:v.tag,desc:v.desc,fac:S.fac,em:GF.em,col:GF.col,xp:0,lv:1,mc:1,own:FB.uid,ownN:S.prof.name,t:fsNow()});
+    await fsPatch('/guilds/'+gid+'/m/'+FB.uid,{n:S.prof.name,pl:level().lv,r:'capo',xp:0,j:fsNow(),a:fsNow()});
+    S.nuc-=G_CREATE;S.guild={id:gid,n:v.n,tag:v.tag,em:GF.em,col:GF.col,lv:1};save();hideModal();sfx('badge');toast('🛡 Gilda fondata!');GD.tab='home';gRefresh();}
+  catch(e){toast('📡 Non riesco a creare la gilda, riprova');}}
+async function gEditSave(){const v=gFVals();if(!v)return;try{await fsPatch('/guilds/'+S.guild.id,{n:v.n,tag:v.tag,desc:v.desc,em:GF.em,col:GF.col});hideModal();toast('Gilda aggiornata');gRefresh();}catch(e){toast('📡 Riprova');}}
+function gLeaveAsk(){const boss=GD.g&&GD.g.own===FB.uid,alone=GD.mem.length<=1;
+  modal(`<div class="accBox"><div style="font-size:40px">🚪</div><div class="ru" style="font-size:20px">Lasciare ${esc(S.guild.n)}?</div><p class="small">${boss?(alone?'Sei l\'unico membro: la gilda verrà <b>sciolta</b>.':'Sei il capo: il comando passerà al membro che ha donato di più.'):'Potrai entrare in un\'altra gilda della tua fazione.'}</p><button class="b3 red goMain" onclick="gLeave()">Lascia</button><button class="goLink" onclick="hideModal()">Annulla</button></div>`);}
+async function gLeave(){const gid=S.guild.id,g=GD.g,boss=g&&g.own===FB.uid,others=GD.mem.filter(m=>m._id!==FB.uid);hideModal();
+  try{if(boss&&!others.length){await fsDel('/guilds/'+gid+'/m/'+FB.uid);await fsDel('/guilds/'+gid);}
+    else{if(boss){const nx=others.sort((a,b)=>(b.xp||0)-(a.xp||0))[0];await fsPatch('/guilds/'+gid,{own:nx._id,ownN:nx.n||''});await fsPatch('/guilds/'+gid+'/m/'+nx._id,{r:'capo'});}
+      await fsDel('/guilds/'+gid+'/m/'+FB.uid);await fsInc('/guilds/'+gid,{mc:-1});
+      fsReq('/guilds/'+gid+'/c',{method:'POST',body:JSON.stringify({fields:fsObj({n:'⚑ Sistema',uid:'sys',tx:S.prof.name+' ha lasciato la gilda.',t:fsNow()})})}).catch(()=>{});}
+    S.guild=null;GD.g=null;GD.mem=[];GD.chat=[];save();toast('Hai lasciato la gilda');gRefresh();}catch(e){toast('📡 Riprova tra poco');}}
+function gManage(uid){const m=GD.mem.find(x=>x._id===uid);if(!m)return;
+  modal(`<div class="accBox"><div class="ru" style="font-size:20px">${esc(m.n)}</div><p class="small">${m.r==='vice'?'Vice capo':'Membro'} · ${fmt(m.xp||0)} XP donati</p>
+   <button class="b3 goMain" onclick="gRole('${uid}','${m.r==='vice'?'membro':'vice'}')">${m.r==='vice'?'Rimuovi da vice':'⭐ Nomina vice'}</button>
+   <button class="b3 goMain" onclick="gBoss('${uid}')">👑 Cedi il comando</button><button class="b3 red goMain" onclick="gKick('${uid}')">Espelli</button><button class="goLink" onclick="hideModal()">Annulla</button></div>`);}
+async function gRole(uid,r){hideModal();try{await fsPatch('/guilds/'+S.guild.id+'/m/'+uid,{r});gRefresh();}catch(e){toast('📡 Riprova');}}
+async function gBoss(uid){hideModal();const m=GD.mem.find(x=>x._id===uid);try{await fsPatch('/guilds/'+S.guild.id,{own:uid,ownN:m.n||''});await fsPatch('/guilds/'+S.guild.id+'/m/'+uid,{r:'capo'});await fsPatch('/guilds/'+S.guild.id+'/m/'+FB.uid,{r:'vice'});gRefresh();}catch(e){toast('📡 Riprova');}}
+async function gKick(uid){hideModal();try{await fsDel('/guilds/'+S.guild.id+'/m/'+uid);await fsInc('/guilds/'+S.guild.id,{mc:-1});toast('Membro espulso');gRefresh();}catch(e){toast('📡 Riprova');}}
+// card in Home
+function gHomeCard(){const el=$('guildCard');if(!el)return;const dd=gDay();
+  if(!S.fac){el.innerHTML='<div class="gHc"><span class="gHi">🛡</span><div><b>Gilde</b><small>Scegli prima la tua fazione</small></div></div>';return;}
+  if(S.guild&&S.guild.id){const todo=(!dd.chk?1:0)+(!dd.ch?1:0);el.innerHTML=`<div class="gHc">${gCrest(S.guild.em,S.guild.col,44)}<div><b>${esc(S.guild.n)} <small>[${esc(S.guild.tag)}]</small></b><small>LV ${S.guild.lv||1} · ${FACS[S.fac].n}</small></div>${todo?`<span class="gTodo">${todo}</span>`:''}<span class="mpGo">›</span></div>`;}
+  else el.innerHTML=`<div class="gHc"><span class="gHi">🛡</span><div><b>Trova una gilda</b><small>Solo Custodi della ${FACS[S.fac].n}</small></div><span class="mpGo">›</span></div>`;}
+
+// ======================= v1.8 · PROFILO: carta del giocatore =======================
+const PC_FR=[{id:'iron',n:'Ferro',lv:1,c:'#8a93a6'},{id:'bronze',n:'Bronzo',lv:5,c:'#cd7f32'},{id:'silver',n:'Argento',lv:10,c:'#d8e2ee'},{id:'gold',n:'Oro',lv:20,c:'#ffcc33'},{id:'crystal',n:'Cristallo',lv:30,c:'#7fe7ff'},{id:'legend',n:'Leggenda',lv:40,c:'#ff4d8a'}];
+function pcS(){if(!S.pc)S.pc={ban:'fac',fr:'iron',tt:''};return S.pc;}
+const SVGI={trophy:'<path d="M7 4h10v4a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M12 13v4M8 21h8M9 17h6"/>',
+ wave:'<path d="M2 15c3 0 3-3 6-3s3 3 6 3 3-3 6-3M2 20c3 0 3-3 6-3s3 3 6 3 3-3 6-3M6 9a6 6 0 0 1 11-3"/>',
+ book:'<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2zM4 20V5M8 7h7M8 11h5"/>',
+ medal:'<circle cx="12" cy="15" r="5"/><path d="M8 3l4 7 4-7M12 13v3"/>',
+ skull:'<path d="M5 11a7 7 0 0 1 14 0v4h-3v4H8v-4H5z"/><circle cx="9.5" cy="11" r="1.4"/><circle cx="14.5" cy="11" r="1.4"/>',
+ crown:'<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',
+ rocket:'<path d="M12 2c3 2 5 6 5 10l-2 4H9l-2-4c0-4 2-8 5-10zM9 16l-3 3M15 16l3 3M12 9v.01"/>',
+ shield:'<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',
+ sword:'<path d="M14 4h6v6L9 21l-3-3zM5 15l4 4M3 21l3-3"/>'};
+const ico=(k,s)=>`<svg class="ico" width="${s||18}" height="${s||18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVGI[k]}</svg>`;
+function pcBanUrl(){const b=pcS().ban;if(b&&b.indexOf('ar')===0){const i=+b.slice(2);return arenaThumb(i);}return '';}
+function pcTitle(){const got=BADGES.filter(b=>S.badges[b.id]),t=pcS().tt;const b=t&&got.find(x=>x.id===t);return b?b.n:(got.length?got[got.length-1].n:'Recluta');}
+let PCA={raf:0,a:-0.7};
+function pcAnim(){cancelAnimationFrame(PCA.raf);const cv=$('pcShip');if(!cv)return;const loop=()=>{if(curScreen!=='sProfile'||!cv.isConnected)return;PCA.a+=0.008;shipRender(cv,{a:PCA.a,t:performance.now()/1000,z:1.55,cy:0.66,noPad:true});PCA.raf=requestAnimationFrame(loop);};loop();}
+profRender=function(){profLayout();const L=level(),pc=pcS(),fr=PC_FR.find(x=>x.id===pc.fr)||PC_FR[0];cupsInit();const c=S.cups.pvp|0,lg=league(c),f=FACS[S.fac],cs=campS(),got=BADGES.filter(b=>S.badges[b.id]),bw=Math.max(S.best[1]||0,S.best[2]||0,S.best[3]||0);
+  const h=$('profHero');if(h){h.className='pcCard';h.style.setProperty('--fc',f?f.c:'#45e9ff');h.style.setProperty('--fc2',f?f.c2:'#06324a');h.style.setProperty('--fr',fr.c);const bu=pcBanUrl();
+   h.innerHTML=`<div class="pcBan ${bu?'img':'fac'}" ${bu?`style="background-image:url(${bu})"`:''}><div class="pcHatch"></div>${f?`<div class="pcCr">${facCrest(S.fac,54)}</div>`:''}<div class="pcLg"><b>${fmt(c)}</b><span>${lg.ic} ${lg.n.toUpperCase()}</span></div></div>
+    <div class="pcMid"><div class="pcPort fr-${fr.id}"><canvas id="pcShip"></canvas><span class="pcLv"><b>${L.lv}</b></span></div>
+     <div class="pcId"><input class="pcName" maxlength="16" value="${esc(S.prof.name)}" onchange="setName(this.value);profRender()"><div class="pcTitle">${esc(pcTitle())}</div>
+      <div class="pcGuild" onclick="openGuild()">${S.guild&&S.guild.id?`${ico('shield',14)} <b>[${esc(S.guild.tag)}]</b> ${esc(S.guild.n)}`:`${ico('shield',14)} Senza gilda`}</div></div></div>
+    <div class="pcXp"><span>LV ${L.lv}</span><div><i style="width:${100*L.cur/L.need}%"></i></div><span>${fmt(L.cur)}/${fmt(L.need)}</span></div>
+    <div class="pcStats"><div>${ico('trophy')}<b>${fmt(c)}</b><small>Coppe</small></div><div>${ico('wave')}<b>${bw}</b><small>Record</small></div><div>${ico('book')}<b>${Object.keys(cs.done).length}<i>/${CAMP.length}</i></b><small>Missioni</small></div><div>${ico('medal')}<b>${got.length}<i>/${BADGES.length}</i></b><small>Badge</small></div></div>
+    <button class="pcEdit" onclick="pcCustom()">PERSONALIZZA CARTA</button>`;pcAnim();}
+  // fazione
+  let fp=$('profFac');if(!fp){fp=document.createElement('div');fp.id='profFac';$('profAcc').before(fp);}
+  fp.className='pcPanel';fp.innerHTML=f?`<div class="pcPh">FAZIONE</div><div class="pfRow" style="--fc:${f.c}">${facCrest(S.fac,58)}<div><b>${f.n}</b><i>«${f.m}»</i><span>${f.perk} · ${f.pv}</span></div></div><button class="pcSmall" onclick="facChangeAsk()">Cambia fazione · ${FAC_CHANGE} ✦</button>`
+    :`<div class="pcPh">FAZIONE</div><button class="pcSmall" onclick="facPick(false)">Scegli la tua fazione</button>`;
+  profAccRender();const a=$('profAcc');if(a){a.classList.add('pcPanel');if(!a.querySelector('.pcPh'))a.insertAdjacentHTML('afterbegin','<div class="pcPh">ACCOUNT</div>');}
+  const v=$('profVer');if(v)v.innerHTML=`<b>DESTROY: battili tutti!</b><span>Versione ${GAME_VER2} · build 25.11.2026</span><small>© NABBINATOR'S STUDIO</small>`;};
+function pcCustom(){sfx('click');const pc=pcS(),L=level();cupsInit();const best=Math.max(S.cups.pvp|0,S.cups.bestPvp|0),bl=LEAGUES.indexOf(league(best)),got=BADGES.filter(b=>S.badges[b.id]);
+  const bans=[{id:'fac',n:'Fazione',ok:true,st:`background:linear-gradient(135deg,${(FACS[S.fac]||FACS.nucleo).c},${(FACS[S.fac]||FACS.nucleo).c2})`}].concat(ARENAS.map((A,i)=>({id:'ar'+i,n:A.n,ok:i<=bl,req:LEAGUES[i].ic+' '+fmt(LEAGUES[i].m),st:`background-image:url(${arenaThumb(i)})`})));
+  modal(`<div class="pcCus"><div class="ru" style="font-size:22px">Personalizza la carta</div>
+   <div class="pcPh">STENDARDO</div><div class="pcBans">${bans.map(b=>`<button class="${pc.ban===b.id?'on':''} ${b.ok?'':'lock'}" style="${b.st}" ${b.ok?`onclick="pcS().ban='${b.id}';save();pcCustom();profRender()"`:''}><span>${b.ok?b.n:'🔒 '+b.req}</span></button>`).join('')}</div>
+   <div class="pcPh">CORNICE</div><div class="pcFrs">${PC_FR.map(x=>{const ok=L.lv>=x.lv;return `<button class="${pc.fr===x.id?'on':''} ${ok?'':'lock'}" ${ok?`onclick="pcS().fr='${x.id}';save();pcCustom();profRender()"`:''}><i class="fr-${x.id}"></i><span>${x.n}</span><small>${ok?'':'LV '+x.lv}</small></button>`;}).join('')}</div>
+   <div class="pcPh">TITOLO</div><div class="pcTts">${got.length?got.map(b=>`<button class="${pc.tt===b.id?'on':''}" onclick="pcS().tt='${b.id}';save();pcCustom();profRender()">${b.n}</button>`).join(''):'<span class="small">Sblocca badge per ottenere nuovi titoli</span>'}</div>
+   <p class="small">Il ritratto è la tua navicella: cambia modello e colori nella pagina 🚀 Navicella.</p>
+   <button class="b3 goMain" onclick="hideModal()">Fatto</button></div>`);}
+// Home: ritratto della nave nel riquadro in alto, fazione e card gilda
+(function(){const _he=homeExtras;homeExtras=function(){try{const av=$('hAv');if(av){av.textContent='';const c=document.createElement('canvas');c.className='hShip';av.appendChild(c);const b=document.createElement('span');b.id='hAvB';b.className='hAvB';av.appendChild(b);av.classList.add('hasShip');}}catch(e){}
+  _he.apply(this,arguments);try{
+  const c=document.querySelector('#hAv canvas');if(c)shipRender(c,{w:46,h:46,a:-0.7,t:1,z:2.3,cy:0.62,noPad:true});
+  const hn=$('hName');if(hn&&S.fac){let fe=$('hFac');if(!fe){fe=document.createElement('span');fe.id='hFac';hn.parentNode.appendChild(fe);}fe.innerHTML=facCrest(S.fac,13)+' '+FACS[S.fac].sh;fe.style.color=FACS[S.fac].c;}
+  let gc=$('guildCard');const mp=document.querySelector('#sHome .mpRow');if(!gc&&mp){gc=document.createElement('div');gc.id='guildCard';gc.className='guildCard';gc.onclick=openGuild;mp.after(gc);const sl=document.createElement('div');sl.className='hSec';sl.innerHTML='<span>🛡</span>GILDA';gc.before(sl);}
+  gHomeCard();}catch(e){console.error(e);}};})();
+
+(function(){const s=document.createElement('style');s.id='v18css';s.textContent=`
+/* ---- FAZIONI ---- */
+#facPick{position:fixed;inset:0;z-index:9000;background:radial-gradient(ellipse at 50% 0,#2a1a5a,#05020e 70%);display:flex;flex-direction:column;gap:10px;padding:calc(16px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));overflow:auto;animation:fpIn .5s ease-out}
+@keyframes fpIn{from{opacity:0}}
+.fpTop{text-align:center}.fpTop small{font-size:11px;letter-spacing:3px;color:#ffd54a;font-weight:700}.fpTop b{display:block;font-family:'Russo One',sans-serif;font-size:26px;margin:4px 0}.fpTop p{margin:0;font-size:13px;color:#ffffffb8}
+.fpList{display:flex;flex-direction:column;gap:10px;flex:1}
+.fpCard{display:flex;gap:12px;align-items:center;text-align:left;padding:12px;border-radius:6px;cursor:pointer;color:#fff;font-family:inherit;
+ background:linear-gradient(100deg,color-mix(in srgb,var(--fc2) 85%,#000),#0b0716 70%);border:2px solid #ffffff1c;box-shadow:inset 0 0 0 1px #000,0 4px 0 #000;transition:transform .15s,border-color .15s;clip-path:polygon(0 10px,10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.fpCard.on{border-color:var(--fc);transform:scale(1.02);box-shadow:inset 0 0 0 1px #000,0 4px 0 #000,0 0 22px color-mix(in srgb,var(--fc) 50%,transparent)}
+.fpCr{flex:none;filter:drop-shadow(0 4px 0 #000)}
+.fpTx b{display:block;font-family:'Russo One',sans-serif;font-size:18px;color:var(--fc)}.fpTx i{display:block;font-size:12px;color:#fff;margin:2px 0 4px}.fpTx p{margin:0;font-size:12px;line-height:1.35;color:#ffffffa8}
+.fpPerk{display:inline-block;margin-top:6px;font-size:11px;font-weight:800;letter-spacing:.5px;padding:3px 8px;background:#000;border:1px solid var(--fc);color:var(--fc);text-transform:uppercase}
+.fpGo{--fc:#ff3d6e}.fpGo:disabled{opacity:.45}
+.facWel{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}.facWel .crest{filter:drop-shadow(0 6px 0 #000);animation:brIn .7s ease-out}
+.facWel small{font-size:11px;letter-spacing:3px;color:var(--fc);font-weight:800}.facWel>b{font-family:'Russo One',sans-serif;font-size:24px}.facWel>i{font-size:13px;color:#ffffffc0}
+.facPerkBig{width:100%;padding:10px;background:#000a;border:2px solid var(--fc);clip-path:polygon(0 8px,8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}.facPerkBig span{display:block;font-size:10px;letter-spacing:2px;color:#ffffff99;text-transform:uppercase}.facPerkBig b{display:block;font-family:'Russo One',sans-serif;font-size:18px;color:var(--fc)}.facPerkBig em{font-size:12px;font-style:normal}
+#hFac{display:inline-flex;align-items:center;gap:3px;font:800 10px/1 sans-serif;letter-spacing:1px;margin-left:6px;vertical-align:middle}#hFac .crest{flex:none}
+#hAv.hasShip{background:radial-gradient(circle at 50% 60%,#2a2070,#0c0820);overflow:visible;padding:0}#hAv .hShip{width:100%;height:100%;display:block;border-radius:inherit}
+.cuBuy{background:linear-gradient(180deg,#ffd54a,#ff9a1a)!important;color:#2a1400!important;font-weight:800}
+.skin.prem.rM{--rc:#ff3d6e}
+/* ---- GILDA ---- */
+#sGuild{gap:10px;padding-bottom:24px}
+.gTopBar{display:flex;align-items:center;gap:10px}.gBack{width:42px;height:42px;border-radius:10px;border:2px solid #ffffff22;background:#120c2a;color:#fff;font-size:26px;line-height:1;cursor:pointer}
+.gTT{flex:1}.gTT small{font-size:10px;letter-spacing:2px;color:var(--fc);font-weight:800}.gTT b{display:block;font-family:'Russo One',sans-serif;font-size:22px}
+.gHero{display:flex;gap:12px;align-items:center;padding:14px;background:linear-gradient(110deg,color-mix(in srgb,var(--gc,var(--fc)) 30%,#0b0716),#0b0716 75%);border:2px solid color-mix(in srgb,var(--gc,var(--fc)) 60%,transparent);box-shadow:inset 0 0 0 1px #000,0 4px 0 #000;clip-path:polygon(0 12px,12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%)}
+.gHero.none{--gc:var(--fc)}.gHeroTx{flex:1;min-width:0}.gHeroTx small{font-size:11px;color:#ffffffa8;font-weight:700;letter-spacing:.5px}.gHeroTx b{display:block;font-family:'Russo One',sans-serif;font-size:22px;margin:2px 0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gHeroTx p{margin:0;font-size:13px;color:#ffffffb8}
+.gCrest{flex:none;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--gc),color-mix(in srgb,var(--gc) 30%,#000));clip-path:polygon(50% 0,100% 14%,100% 55%,50% 100%,0 55%,0 14%);position:relative}
+.gCrest:before{content:'';position:absolute;inset:3px;background:linear-gradient(180deg,#1a1230,#05020e);clip-path:inherit}.gCrest span{position:relative;filter:drop-shadow(0 2px 0 #000)}
+.gLv{display:flex;align-items:center;gap:6px}.gLv span{font:800 12px/1 'Russo One',sans-serif;background:#000;border:1px solid var(--gc,var(--fc));padding:3px 6px;color:var(--gc,var(--fc))}.gLv div{flex:1;height:8px;background:#000;border:1px solid #ffffff22}.gLv i{display:block;height:100%;background:var(--gc,var(--fc))}.gLv em{font-size:10px;font-style:normal;color:#ffffffa0}
+.gTabs{display:flex;gap:4px;background:#000;padding:3px;border:1px solid #ffffff1a}.gTabs button{flex:1;border:0;padding:10px 4px;background:transparent;color:#ffffff99;font:800 12px/1 sans-serif;cursor:pointer}.gTabs button.on{background:var(--fc);color:#05020e}
+.gBody{display:flex;flex-direction:column;gap:8px}
+.gSec{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1px;color:#fff;margin-top:4px}.gSec small{font-family:sans-serif;font-size:11px;color:#ffffff80;letter-spacing:0;margin-left:6px}
+.gActs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gAct{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px;text-align:left;background:#120c2a;border:2px solid #ffffff1c;border-bottom:4px solid #000;color:#fff;font-family:inherit;cursor:pointer}
+.gAct span{font-size:22px;color:var(--fc)}.gAct b{font-size:13px}.gAct small{font-size:11px;color:#ffffffa8}.gAct.chest{border-color:#ffd54a66}.gAct.done{opacity:.55}
+.gPerks{display:flex;flex-direction:column;gap:4px}.gPerk{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#0b0716;border-left:3px solid #ffffff22;font-size:12px;color:#ffffff70}.gPerk b{flex:1;font-weight:600}.gPerk em{font-style:normal;font-weight:800;font-size:11px}
+.gPerk.on{border-left-color:var(--fc);color:#fff;background:linear-gradient(90deg,color-mix(in srgb,var(--fc) 16%,transparent),#0b0716)}.gPerk.on em{color:var(--fc)}
+.gDesc{font-size:13px;color:#ffffffc0;padding:8px 10px;background:#0b0716;border-left:3px solid var(--fc)}
+.gBtns{display:flex;gap:8px;margin-top:6px}
+.gRow2{display:flex;gap:8px}.gRow2 input{flex:1;min-width:0;background:#0b0716;border:2px solid #ffffff22;color:#fff;padding:10px;font-size:14px}.gNew{border:0;background:var(--fc);color:#05020e;font-weight:800;padding:0 14px;cursor:pointer}
+.gList{display:flex;flex-direction:column;gap:6px}
+.gItem{display:flex;gap:10px;align-items:center;padding:10px;background:#120c2a;border:1px solid #ffffff1a;border-bottom:3px solid #000}.gIt{flex:1;min-width:0}.gIt b{display:block;font-size:14px}.gIt b small{color:#ffffff88}.gIt span{font-size:11px;color:var(--fc);font-weight:700}.gIt i{display:block;font-size:11px;color:#ffffff99;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gItem button{border:0;background:var(--fc);color:#05020e;font-weight:800;padding:9px 12px;cursor:pointer}.gItem button:disabled{background:#333;color:#888}
+.gMem{display:flex;flex-direction:column;gap:5px}.gM{display:flex;align-items:center;gap:8px;padding:8px;background:#120c2a;border:1px solid #ffffff14}.gM.me{border-color:var(--fc)}
+.gMp{width:22px;text-align:center;font:800 12px/1 'Russo One',sans-serif;color:#ffffff80}.gM .dlbAv{position:relative}.gOn{position:absolute;right:-2px;bottom:-2px;width:9px;height:9px;border-radius:50%;background:#7dff6a;box-shadow:0 0 0 2px #120c2a}
+.gMt{flex:1;min-width:0}.gMt b{display:block;font-size:13px}.gMt b small{color:var(--fc)}.gMt span{font-size:11px;color:#ffffff99}.gMx{text-align:right}.gMx b{display:block;font:800 13px/1 'Russo One',sans-serif}.gMx small{font-size:9px;color:#ffffff80}
+.gMb{border:1px solid #ffffff33;background:transparent;color:#fff;width:30px;height:30px;cursor:pointer}
+.gChat{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow:auto;padding:4px}
+.gC{align-self:flex-start;max-width:80%;background:#1a1236;border:1px solid #ffffff14;padding:6px 9px}.gC b{font-size:11px;color:var(--fc)}.gC p{margin:2px 0 0;font-size:13px;word-wrap:break-word}.gC small{font-size:9px;color:#ffffff70}
+.gC.me{align-self:flex-end;background:color-mix(in srgb,var(--fc) 22%,#120c2a)}
+.gSend{display:flex;gap:6px;position:sticky;bottom:0}.gSend input{flex:1;min-width:0;background:#0b0716;border:2px solid #ffffff22;color:#fff;padding:11px;font-size:14px}.gSend button{border:0;background:var(--fc);color:#05020e;font-size:18px;width:48px;cursor:pointer}
+.gForm{display:flex;flex-direction:column;gap:8px;text-align:left}.gForm label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:#ffffffa8;font-weight:700;letter-spacing:.5px}
+.gForm input{background:#0b0716;border:2px solid #ffffff22;color:#fff;padding:10px;font-size:14px}.gFPrev{display:flex;justify-content:center}.gFl{font-size:11px;color:#ffffffa8;font-weight:700}
+.gEmb,.gCol{display:flex;flex-wrap:wrap;gap:6px}.gEmb button{width:40px;height:40px;font-size:20px;background:#120c2a;border:2px solid #ffffff1a;cursor:pointer}.gEmb button.on{border-color:#ffd54a}
+.gCol button{width:30px;height:30px;border:3px solid #000;cursor:pointer}.gCol button.on{outline:3px solid #fff}
+.guildCard{cursor:pointer}.gHc{display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(110deg,#1a1236,#0b0716);border:2px solid #ffffff1c;border-bottom:4px solid #000;border-radius:16px;min-height:44px}
+.gHc>div{flex:1;min-width:0}.gHc b{display:block;font-family:'Russo One',sans-serif;font-size:16px}.gHc b small{font-family:sans-serif;color:#ffffff88;font-size:12px}.gHc>div>small{font-size:12px;color:#ffffffa8}.gHi{font-size:30px}
+.gTodo{min-width:22px;height:22px;border-radius:11px;background:#ff2d6f;color:#fff;font:800 12px/22px sans-serif;text-align:center;animation:mlPulse 1.6s infinite}
+/* ---- PROFILO: carta del giocatore ---- */
+#profHero.pcCard{position:relative;border-radius:0;padding:0 0 12px;text-align:left;overflow:visible;background:#0d0a1c;border:2px solid #000;box-shadow:0 0 0 2px var(--fr),0 6px 0 #000,inset 0 0 0 1px #ffffff14;clip-path:none}
+.pcBan{position:relative;height:112px;background-size:cover;background-position:center;border-bottom:2px solid #000}
+.pcBan.fac{background:linear-gradient(120deg,var(--fc2),#0d0a1c 80%)}
+.pcHatch{position:absolute;inset:0;background:repeating-linear-gradient(135deg,#ffffff08 0 6px,transparent 6px 14px),linear-gradient(180deg,transparent 40%,#0d0a1cdd)}
+.pcCr{position:absolute;left:10px;top:8px;filter:drop-shadow(0 3px 0 #000)}
+.pcLg{position:absolute;right:10px;top:10px;text-align:right;background:#000c;border:1px solid #ffffff2a;padding:5px 9px}.pcLg b{display:block;font:20px/1 'Russo One',sans-serif}.pcLg span{font-size:10px;font-weight:800;letter-spacing:1px;color:#ffd54a}
+.pcMid{display:flex;gap:12px;align-items:flex-end;padding:0 12px;margin-top:-40px;position:relative}
+.pcPort{position:relative;width:104px;height:104px;flex:none;background:radial-gradient(circle at 50% 62%,#2a2070,#0a0618 75%);border:4px solid var(--fr);box-shadow:0 0 0 2px #000,0 5px 0 #000;clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px),0 14px)}
+.pcPort canvas{width:100%;height:100%;display:block}
+.pcPort.fr-gold,.pcPort.fr-legend,.pcPort.fr-crystal{box-shadow:0 0 0 2px #000,0 5px 0 #000,0 0 18px var(--fr)}
+.pcLv{position:absolute;left:0;bottom:0;width:34px;height:30px;background:var(--fr);clip-path:polygon(0 0,100% 30%,100% 100%,0 100%);display:flex;align-items:flex-end;justify-content:flex-start;padding:0 0 3px 5px;box-sizing:border-box}.pcLv b{font:16px/1 'Russo One',sans-serif;color:#0d0a1c}
+.pcId{flex:1;min-width:0;padding-bottom:4px}
+.pcName{display:block;width:100%;background:transparent;border:0;border-bottom:2px solid #ffffff1a;color:#fff;font:22px/1.1 'Russo One',sans-serif;padding:2px 0;text-transform:uppercase}
+.pcTitle{font-size:12px;font-weight:800;letter-spacing:1px;color:var(--fc);text-transform:uppercase;margin-top:5px}
+.pcGuild{display:flex;align-items:center;gap:5px;font-size:12px;color:#ffffffb0;margin-top:4px;cursor:pointer}.pcGuild b{color:#fff}
+.pcXp{display:flex;align-items:center;gap:8px;margin:12px 12px 0;font:800 11px/1 sans-serif;color:#ffffffa0}.pcXp div{flex:1;height:10px;background:#000;border:1px solid #ffffff22}.pcXp i{display:block;height:100%;background:repeating-linear-gradient(90deg,var(--fc) 0 8px,color-mix(in srgb,var(--fc) 70%,#000) 8px 10px)}
+.pcStats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:12px 12px 0;border:2px solid #000;background:#000}
+.pcStats>div{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px;background:#161130;color:var(--fc)}.pcStats>div+div{border-left:2px solid #000}
+.pcStats b{font:17px/1 'Russo One',sans-serif;color:#fff}.pcStats b i{font-size:11px;font-style:normal;color:#ffffff70}.pcStats small{font-size:10px;font-weight:700;letter-spacing:.5px;color:#ffffff90;text-transform:uppercase}
+.pcEdit{display:block;margin:12px 12px 0;width:calc(100% - 24px);padding:11px;border:2px solid #000;background:linear-gradient(180deg,#2a2250,#1a1438);color:#fff;font:14px/1 'Russo One',sans-serif;letter-spacing:1px;box-shadow:inset 0 1px 0 #ffffff22,0 4px 0 #000;cursor:pointer}
+.pcPanel{background:#0d0a1c!important;border:2px solid #000!important;box-shadow:0 0 0 1px #ffffff1a,0 4px 0 #000!important;border-radius:0!important;padding:12px!important;display:flex;flex-direction:column;gap:8px}
+.pcPh{font:12px/1 'Russo One',sans-serif;letter-spacing:2px;color:#ffffff80;display:flex;align-items:center;gap:8px}.pcPh:after{content:'';flex:1;height:2px;background:#ffffff14}
+.pfRow{display:flex;gap:12px;align-items:center}.pfRow .crest{flex:none;filter:drop-shadow(0 3px 0 #000)}.pfRow b{display:block;font-family:'Russo One',sans-serif;font-size:17px;color:var(--fc)}.pfRow i{display:block;font-size:12px;color:#fff}.pfRow span{display:inline-block;margin-top:5px;font-size:11px;font-weight:800;padding:2px 7px;background:#000;border:1px solid var(--fc);color:var(--fc);text-transform:uppercase}
+.pcSmall{border:2px solid #000;background:#1a1438;color:#fff;padding:10px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #000;cursor:pointer}
+#profAcc.pcPanel .paHead{margin-top:2px}#profAcc .paLogin{border-radius:0;border:2px solid #000;box-shadow:0 3px 0 #000}#profAcc .paB{border-radius:0}
+#sProfile .profStatsC,#sProfile .profBadgesC{background:#0d0a1c;border:2px solid #000;box-shadow:0 0 0 1px #ffffff1a,0 4px 0 #000;border-radius:0}
+.profStatsC #pStats>*{border-radius:0!important;background:#161130!important;border:0!important;border-left:3px solid var(--fcx,#45e9ff)!important}
+.pcCus{display:flex;flex-direction:column;gap:8px;text-align:left}
+.pcBans{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.pcBans button{height:56px;background-size:cover;background-position:center;border:3px solid #000;position:relative;cursor:pointer;display:flex;align-items:flex-end;padding:0}
+.pcBans button span{width:100%;background:#000b;color:#fff;font-size:10px;font-weight:700;padding:3px}.pcBans button.on{outline:3px solid #ffd54a}.pcBans button.lock{filter:grayscale(.85) brightness(.55);cursor:default}
+.pcFrs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pcFrs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;background:#120c2a;border:2px solid #000;color:#fff;font-size:11px;cursor:pointer}.pcFrs button.on{outline:3px solid #ffd54a}.pcFrs button.lock{opacity:.4;cursor:default}.pcFrs small{color:#ffd54a;font-weight:800}
+.pcFrs i{width:30px;height:30px;border-width:4px;border-style:solid;box-shadow:0 0 0 2px #000}
+.fr-iron{border-color:#8a93a6}.fr-bronze{border-color:#cd7f32}.fr-silver{border-color:#d8e2ee}.fr-gold{border-color:#ffcc33}.fr-crystal{border-color:#7fe7ff}.fr-legend{border-color:#ff4d8a}
+.pcFrs i.fr-gold,.pcFrs i.fr-crystal,.pcFrs i.fr-legend{box-shadow:0 0 0 2px #000,0 0 10px currentColor}
+.pcTts{display:flex;flex-wrap:wrap;gap:6px}.pcTts button{border:2px solid #000;background:#1a1438;color:#fff;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer}.pcTts button.on{background:#ffd54a;color:#2a1400}
 `;document.head.appendChild(s);})();
 
 try{if(typeof renderHome==='function'&&curScreen==='sHome')renderHome();}catch(e){}
