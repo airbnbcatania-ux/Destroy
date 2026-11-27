@@ -1,14 +1,12 @@
 name: App Android
 
-# Costruisce l'app Android di "Destroy: battili tutti!":
-#  - un file AAB da caricare sul Play Store
-#  - un APK da installare sul telefono per provarla
-# Parte da sola quando aggiorni index.html, oppure a mano da Actions -> App Android -> Run workflow.
+# Costruisce l'app Android del gioco (AAB per il Play Store + APK da installare sul telefono).
+# Parte da sola quando cambi index.html o la cartella android/, oppure a mano da "Actions → App Android → Run workflow".
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
-    paths: [ 'index.html', '.github/workflows/android.yml' ]
+    paths: [ 'index.html', 'android/**', '.github/workflows/android.yml' ]
 
 jobs:
   build:
@@ -21,250 +19,14 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - uses: android-actions/setup-android@v3
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.14.3'
 
-      - name: Crea il progetto Android
-        run: |
-          mkdir -p "android/."
-          cat > "android/settings.gradle" <<'EOF_DESTROY'
-          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
-          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
-          rootProject.name = "Destroy"
-          include ':app'
-          EOF_DESTROY
-          mkdir -p "android/."
-          cat > "android/build.gradle" <<'EOF_DESTROY'
-          plugins { id 'com.android.application' version '8.10.1' apply false }
-          EOF_DESTROY
-          mkdir -p "android/."
-          cat > "android/gradle.properties" <<'EOF_DESTROY'
-          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
-          android.useAndroidX=true
-          android.nonTransitiveRClass=true
-          EOF_DESTROY
-          mkdir -p "android/app"
-          cat > "android/app/build.gradle" <<'EOF_DESTROY'
-          plugins { id 'com.android.application' }
-
-          def ks = System.getenv("DESTROY_KEYSTORE")   // percorso del keystore (creato dal workflow dai Secrets)
-
-          android {
-              namespace 'com.nabbinator.destroy'
-              compileSdk 36
-              defaultConfig {
-                  applicationId 'com.nabbinator.destroy'
-                  minSdk 24
-                  targetSdk 36
-                  versionCode = (System.getenv("VERSION_CODE") ?: "1").toInteger()
-                  versionName = (System.getenv("VERSION_NAME") ?: "1.0")
-              }
-              signingConfigs {
-                  release {
-                      if (ks) {
-                          storeFile file(ks)
-                          storePassword System.getenv("DESTROY_KEYSTORE_PASSWORD")
-                          keyAlias System.getenv("DESTROY_KEY_ALIAS")
-                          keyPassword System.getenv("DESTROY_KEY_PASSWORD")
-                      }
-                  }
-              }
-              buildTypes {
-                  release {
-                      minifyEnabled false
-                      if (ks) signingConfig signingConfigs.release
-                  }
-              }
-              compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
-              lint { checkReleaseBuilds false; abortOnError false }
-          }
-
-          dependencies {
-              implementation 'com.google.android.gms:play-services-ads:23.6.0'
-              implementation 'androidx.webkit:webkit:1.12.1'
-          }
-          EOF_DESTROY
-          mkdir -p "android/app/src/main"
-          cat > "android/app/src/main/AndroidManifest.xml" <<'EOF_DESTROY'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-              <uses-permission android:name="android.permission.VIBRATE" />
-
-              <application
-                  android:label="Destroy: battili tutti!"
-                  android:icon="@mipmap/ic_launcher"
-                  android:roundIcon="@mipmap/ic_launcher"
-                  android:theme="@style/Theme.Destroy"
-                  android:hardwareAccelerated="true"
-                  android:allowBackup="true"
-                  android:networkSecurityConfig="@xml/network_security_config">
-
-                  <!-- ID app AdMob -->
-                  <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID"
-                      android:value="ca-app-pub-2439349628224095~9592810098" />
-                  <meta-data android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION" android:value="true" />
-                  <meta-data android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING" android:value="true" />
-
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true"
-                      android:screenOrientation="portrait"
-                      android:configChanges="orientation|screenSize|keyboardHidden|keyboard|screenLayout|uiMode"
-                      android:launchMode="singleTask">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF_DESTROY
-          mkdir -p "android/app/src/main/res/values"
-          cat > "android/app/src/main/res/values/themes.xml" <<'EOF_DESTROY'
-          <?xml version="1.0" encoding="utf-8"?>
-          <resources>
-              <style name="Theme.Destroy" parent="android:Theme.Material.NoActionBar">
-                  <item name="android:windowBackground">@android:color/black</item>
-                  <item name="android:statusBarColor">@android:color/black</item>
-                  <item name="android:navigationBarColor">@android:color/black</item>
-                  <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-              </style>
-          </resources>
-          EOF_DESTROY
-          mkdir -p "android/app/src/main/res/xml"
-          cat > "android/app/src/main/res/xml/network_security_config.xml" <<'EOF_DESTROY'
-          <?xml version="1.0" encoding="utf-8"?>
-          <network-security-config>
-              <base-config cleartextTrafficPermitted="false" />
-          </network-security-config>
-          EOF_DESTROY
-          mkdir -p "android/app/src/main/java/com/nabbinator/destroy"
-          cat > "android/app/src/main/java/com/nabbinator/destroy/MainActivity.java" <<'EOF_DESTROY'
-          package com.nabbinator.destroy;
-
-          import android.annotation.SuppressLint;
-          import android.app.Activity;
-          import android.graphics.Color;
-          import android.net.ConnectivityManager;
-          import android.net.NetworkCapabilities;
-          import android.os.Build;
-          import android.os.Bundle;
-          import android.view.View;
-          import android.view.WindowInsets;
-          import android.view.WindowInsetsController;
-          import android.view.WindowManager;
-          import android.webkit.CookieManager;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebResourceError;
-          import android.webkit.WebResourceRequest;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-
-          import com.google.android.gms.ads.MobileAds;
-
-          /**
-           * Destroy: battili tutti! — contenitore Android del gioco.
-           * Carica la versione online (sempre aggiornata, con account, PvP e classifiche);
-           * senza connessione usa la copia inclusa nell'app.
-           * La WebView è registrata presso Google Mobile Ads, così gli annunci AdMob del gioco funzionano.
-           */
-          public class MainActivity extends Activity {
-              private static final String ONLINE_URL = "https://airbnbcatania-ux.github.io/Destroy/?app=android";
-              private static final String OFFLINE_URL = "file:///android_asset/index.html?app=android";
-              private WebView web;
-              private boolean usedOffline = false;
-
-              @SuppressLint("SetJavaScriptEnabled")
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-                  web = new WebView(this);
-                  web.setBackgroundColor(Color.BLACK);
-                  setContentView(web);
-                  goFullscreen();
-
-                  WebSettings s = web.getSettings();
-                  s.setJavaScriptEnabled(true);
-                  s.setDomStorageEnabled(true);
-                  s.setDatabaseEnabled(true);
-                  s.setMediaPlaybackRequiresUserGesture(false); // musica e intro partono subito
-                  s.setLoadWithOverviewMode(true);
-                  s.setUseWideViewPort(true);
-                  s.setSupportZoom(false);
-                  s.setAllowFileAccess(true);
-                  s.setCacheMode(WebSettings.LOAD_DEFAULT);
-                  s.setUserAgentString(s.getUserAgentString() + " DestroyApp/Android");
-
-                  CookieManager.getInstance().setAcceptCookie(true);
-                  CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
-
-                  web.setWebChromeClient(new WebChromeClient());
-                  web.setWebViewClient(new WebViewClient() {
-                      @Override
-                      public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError err) {
-                          if (req.isForMainFrame() && !usedOffline) { usedOffline = true; view.loadUrl(OFFLINE_URL); }
-                      }
-                  });
-
-                  // Annunci: inizializza AdMob e registra la WebView (API WebView per gli annunci)
-                  MobileAds.initialize(this, status -> {});
-                  MobileAds.registerWebView(web);
-
-                  if (savedInstanceState != null) web.restoreState(savedInstanceState);
-                  else if (isOnline()) web.loadUrl(ONLINE_URL);
-                  else { usedOffline = true; web.loadUrl(OFFLINE_URL); }
-              }
-
-              private boolean isOnline() {
-                  try {
-                      ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-                      NetworkCapabilities nc = cm.getNetworkCapabilities(cm.getActiveNetwork());
-                      return nc != null && nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                  } catch (Exception e) { return true; }
-              }
-
-              private void goFullscreen() {
-                  if (Build.VERSION.SDK_INT >= 30) {
-                      getWindow().setDecorFitsSystemWindows(false);
-                      WindowInsetsController c = getWindow().getInsetsController();
-                      if (c != null) {
-                          c.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                          c.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-                      }
-                  } else {
-                      getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                          | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                          | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                          | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-                  }
-              }
-
-              @Override public void onWindowFocusChanged(boolean hasFocus) { super.onWindowFocusChanged(hasFocus); if (hasFocus) goFullscreen(); }
-              @Override protected void onPause() { super.onPause(); web.onPause(); web.evaluateJavascript("try{R&&!R.over&&(R.paused=true)}catch(e){}", null); }
-              @Override protected void onResume() { super.onResume(); web.onResume(); }
-              @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); web.saveState(out); }
-              @Override protected void onDestroy() { if (web != null) web.destroy(); super.onDestroy(); }
-
-              // Tasto Indietro: chiude una finestra aperta nel gioco o torna alla Home; altrimenti manda l'app in background
-              @Override
-              public void onBackPressed() {
-                  web.evaluateJavascript(
-                      "(function(){try{var m=document.getElementById('ov');if(m&&getComputedStyle(m).display!=='none'&&typeof hideModal==='function'){hideModal();return 1;}" +
-                      "if(window.R&&!R.over){R.paused=true;return 1;}if(typeof curScreen!=='undefined'&&curScreen!=='sHome'&&typeof go==='function'){go('sHome');return 1;}}catch(e){}return 0;})()",
-                      v -> { if (!"1".equals(v)) moveTaskToBack(true); });
-              }
-          }
-          EOF_DESTROY
-          mkdir -p android/app/src/main/res/mipmap-xxhdpi android/app/src/main/assets
-          echo 'iVBORw0KGgoAAAANSUhEUgAAAJAAAACQCAMAAADQmBKKAAABIFBMVEUhIlEfD1QdDVBg0echDVOZ3vEkJS8qUl08i5deHi0hBTpBT1xQG03cL05OacKYJkiRITYqVS+TttH3VG/m7ulVAFVRapVVmF1xjJ9WuuGDnbWb8o0AAP8/fqFAdTh43HD/fpT/kaP/uMQrFmsiEVogJDIcDU0zI3s5N4wAAAA2K4M9Q5ZFVqowOkwYGycvRVUHCA0bIy5CTKJASJ0PExpIaLP5/v41VmlMWXKO/f43ZnVVt85IdbYEAVJKmK07dI1EeIyw/P5t1uxFh5hMZHtw+P06Zo4HAz1Po7XR/P5NecNRqshRZ4UAAH02SmsZC0hOiMdXxdcTDS1QmM5u6vWR5vgaC0okMT0YC0c4VYxY1ehmx9pGiqUvNnQeEVAiEFqtdEOWAAAAYHRSTlP9rF7/JP//////Gf////////////8D////////Af////////7+//7//wD/////////////////////////Bv///////////wn//////wL/0f///////y3/lP///////9Gz7MasAAAM8UlEQVR42s2ciX+iShLHG69cc71593u7+3ZXeDpBIBgZjLfxGJMYEyfmvv7//2KrGpSrkQZjsvVJjEGgv/6quqHp6iZfgvYNfptXqZuzs785TbSMc++zs5vUVRMLOQ0WTgJbYKcmwESclBB8EZlG6A5RVDepplXaciBQ5yqSRuS0SKarIJIXqIk4UdqIcSziZMIVLTQMqPnl23Ic8UlMYEtPebPtJfIqlDp7CU/FQzpLedxGXMG8nVoLTSTTTcZFRJxo/iasjSaCSdh2iByF1s6zBOlsmzZ+XoXO1o6znMgD1Azl4atXeWo8ez6JoURNN1CYv7hA/JZIpTP7OkIsgVIJePJLbLlK7LpmSUTCeUK9BeXlOUwM5WL7LUUDm2ADxAygJMLwS8UiukKNCLZAN/w8+djGTyRYQKdfrtaIEwspBUQYQwIXT34l4yI6s2Jo+xV4OIlAIsKIoDXgcCJBFJFAFVsTTghToKKRQBu0PhwOohQA3UTok8+/IpHwjXg9tmYcJpLXZ+TqlXkiiFIktYQnvyZbQnRDbl6fZxmRQIQ34FlGRBYx/fR6OAwkByhEoHz+jYjIW/H4ifxA4usD5Zn3teSt9AnT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' | base64 -d > android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          cp index.html android/app/src/main/assets/index.html
-
+      - name: Copia il gioco dentro l'app (versione offline)
+        run: cp index.html android/app/src/main/assets/index.html
 
       - name: Prepara la chiave di firma (dai Secrets del repository)
         env:
@@ -274,7 +36,7 @@ jobs:
             echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/destroy.jks"
             echo "DESTROY_KEYSTORE=$RUNNER_TEMP/destroy.jks" >> "$GITHUB_ENV"
           else
-            echo "::warning::Secret DESTROY_KEYSTORE_B64 mancante: app senza firma, non caricabile sul Play Store."
+            echo "::warning::Secret DESTROY_KEYSTORE_B64 mancante: l'app viene creata senza firma (non caricabile sul Play Store)."
           fi
 
       - name: Costruisci AAB e APK

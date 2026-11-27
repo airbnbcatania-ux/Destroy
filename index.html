@@ -5800,6 +5800,174 @@ function introMus(t){
   return {m:'game',tier:8,bpm:164};}
 (function(){const _mu=musUpdate;musUpdate=function(){if(INTRO_T==null||!$('i3'))return _mu.apply(this,arguments);const P=introMus(INTRO_T);AU.mode=P.m;AU.sec=1;AU.tier=P.tier||0;AU.lvl=(P.tier||0)/9;AU.boss=!!P.boss;AU.danger=!!P.danger;AU.bpm=P.bpm||130;AU.int=Math.min(3,Math.floor(AU.tier/2));};})();
 
+// ======================= v2.1 · DUELLO MORTALE: il nuovo PvP (online 1 vs 1 e allenamento contro l'IA) =======================
+// Niente farming: si combatte dal primo secondo. Arena circolare nel colosseo che si restringe (il Vuoto divora i bordi),
+// colonne dietro cui ripararsi, colpi lenti e visibili da schivare, SCATTO con invulnerabilità, SUPER che si carica
+// infliggendo danni, celle di potenza al centro da contendersi. Al meglio dei 3 round.
+const DMC={R0:413,R1:105,shrinkA:12,shrinkB:42,hp:100,dmg:8,rate:0.42,spd:290,life:1.6,dashCd:2.4,dashT:0.2,dashV:900,supDmg:9,supN:11,cellT:9,zone:14};
+function dmPillars(cx,cy){const P=[];for(let i=0;i<4;i++){const a=Math.PI/4+i*Math.PI/2;P.push({x:cx+Math.cos(a)*180,y:cy+Math.sin(a)*180,r:24});}P.push({x:cx-310,y:cy,r:20},{x:cx+310,y:cy,r:20});return P;}
+function startDuel(){hideModal();try{startRun({sec:1,seed:(Date.now()%100000)+1,dm:true});}catch(e){console.error(e);}MPX=true;
+  R.st=calc();R.st.maxHp=DMC.hp;R.st.regen=0;R.st.shieldMax=0;R.shield=0;R.hp=DMC.hp;R.spawnT=1e9;R.spawnQ=[];R.enemies=[];
+  const cx=R.tx,cy=R.ty;R.pvMid=cx;R.pvZ=cy;R.arenaI=Math.min(5,LEAGUES.indexOf(league((S.cups&&S.cups.pvp)||0))+1);R.arT=0;
+  R.dm={round:0,score:[0,0],t:0,ph:'pre',pt:0,rad:DMC.R0,cx,cy,shots:[],cells:[],cellT:DMC.cellT,pil:dmPillars(cx,cy),
+    me:{dashCd:0,dashT:0,sup:0,buff:0,inv:0,hit:0},bot:{x:cx,y:cy-200,hp:DMC.hp,aim:0,cd:0.6,dashCd:1,dashT:0,dvx:0,dvy:0,sup:0,buff:0,inv:0,hit:0,str:1,strT:2,react:0}};
+  pvpUi(true);dmUi(true);document.body.classList.add('dmOn');dmRound();}
+function dmRound(){const D=R.dm;D.round++;D.t=0;D.ph='pre';D.pt=2.2;D.rad=DMC.R0;D.shots=[];D.cells=[];D.cellT=DMC.cellT;
+  const sd=D.side||1;R.tx=D.cx;R.ty=D.cy+200*sd;R.vx=R.vz=0;R.hp=DMC.hp;R.down1=false;Object.assign(D.me,{dashCd:0,dashT:0,buff:0,inv:0});Object.assign(D.bot,{x:D.cx,y:D.cy-200*(D.side||1),hp:DMC.hp,dashCd:1,dashT:0,buff:0,inv:0,cd:0.8});
+  D.cellN=0;R.banner={t:'ROUND '+D.round,c:'#ffd54a',l:2,s:D.score[0]+' – '+D.score[1],sc:'#fff'};try{sfx('wave');}catch(e){}}
+(function(){const _nw=nextWave;nextWave=function(){if(R&&R.dm)return;return _nw.apply(this,arguments);};
+  const _er=endRun;endRun=function(f){if(R&&R.dm){if(f){dmQuit();}return;}return _er.apply(this,arguments);};
+  const _dg=drawGround;drawGround=function(cw,ch,sec){if(R&&R.dm){try{return arenaGround(cw,ch);}catch(e){}}return _dg.apply(this,arguments);};})();
+function dmUi(on){let u=$('dmUi');if(!on){if(u)u.remove();document.body.classList.remove('dmOn');return;}if(u)return;u=document.createElement('div');u.id='dmUi';
+  u.innerHTML='<button id="dmDash" onpointerdown="dmDash(0);event.stopPropagation()">💨<small>SCATTO</small></button><button id="dmSup" onpointerdown="dmSuper(0);event.stopPropagation()"><i id="dmSupF"></i><b>☄</b><small>SUPER</small></button>';$('battle').appendChild(u);}
+function dmP(i){const D=R.dm;return i?D.bot:{x:R.tx,y:R.ty,...D.me};}
+function dmDash(i){const D=R&&R.dm;if(!D||D.ph!=='fight')return;const s=i?D.bot:D.me;if(s.dashCd>0)return;s.dashCd=DMC.dashCd;s.dashT=DMC.dashT;s.inv=DMC.dashT+0.05;
+  let dx,dy;if(i){dx=s.dvx;dy=s.dvy;}else{const v=Math.hypot(R.vx||0,R.vz||0);if(v>20){dx=R.vx/v;dy=R.vz/v;}else{const a=R.aim+Math.PI/2;dx=Math.cos(a);dy=Math.sin(a);}}s.dx=dx;s.dy=dy;
+  const p=i?[s.x,s.y]:[R.tx,R.ty];burst(p[0],p[1],i?'#ffb44a':'#5ff1ff',12,20);try{sfx('shoot');}catch(e){}}
+function dmSuper(i){const D=R&&R.dm;if(!D||D.ph!=='fight')return;const s=i?D.bot:D.me;if(s.sup<100)return;s.sup=0;const a0=i?Math.atan2(R.ty-s.y,R.tx-s.x):Math.atan2(D.bot.y-R.ty,D.bot.x-R.tx),x=i?s.x:R.tx,y=i?s.y:R.ty;
+  for(let k=0;k<DMC.supN;k++){const a=a0+(k-(DMC.supN-1)/2)*0.09;D.shots.push({x:x+Math.cos(a)*18,y:y+Math.sin(a)*18,vx:Math.cos(a)*380,vy:Math.sin(a)*380,l:1.4,o:i,d:DMC.supDmg*(s.buff>0?1.35:1),big:1});}
+  if(!i&&D.net)dmNetShot(D.shots.slice(-DMC.supN));
+  R.banner={t:i?'SUPER NEMICA!':'SUPER!',c:i?'#ffb44a':'#5ff1ff',l:1};R.shake=8;ring(x,y,70,i?'#ffb44a':'#5ff1ff');try{sfx('big');buzz(40);}catch(e){}}
+function dmBlocked(x,y){for(const p of R.dm.pil)if(dist(x,y,p.x,p.y)<p.r)return p;return null;}
+function dmKeep(o,isMe){const D=R.dm;for(const p of D.pil){const d=dist(o.x,o.y,p.x,p.y),m=p.r+14;if(d<m){const a=Math.atan2(o.y-p.y,o.x-p.x);o.x=p.x+Math.cos(a)*m;o.y=p.y+Math.sin(a)*m;}}
+  const d=dist(o.x,o.y,D.cx,D.cy),lim=DMC.R0+40;if(d>lim){const a=Math.atan2(o.y-D.cy,o.x-D.cx);o.x=D.cx+Math.cos(a)*lim;o.y=D.cy+Math.sin(a)*lim;}}
+function dmTick(dt){const D=R.dm,me=D.me,bot=D.bot;if(!D||R.over)return;D.t+=dt;
+  if(D.ph==='pre'){D.pt-=dt;if(D.net&&D.round===1)D.pt=Math.max(D.pt,(NET.startAt-srvNow())/1000);if(D.pt<=0){D.ph='fight';R.banner={t:'COMBATTI!',c:'#ff3d5e',l:0.9};try{sfx('boss');}catch(e){}}R.tx=D.cx;R.ty=D.cy+200*(D.side||1);if(D.net)dmNetTick(dt);return;}
+  if(D.ph==='ko'){D.pt-=dt;if(D.net)dmNetTick(dt);if(D.pt<=0){if(Math.max(...D.score)>=2)return D.net?dmNetEnd(false):dmEnd();dmRound();}return;}
+  // zona che si restringe
+  const ft=D.t;D.rad=ft<DMC.shrinkA?DMC.R0:ft>DMC.shrinkB?DMC.R1:DMC.R0-(DMC.R0-DMC.R1)*(ft-DMC.shrinkA)/(DMC.shrinkB-DMC.shrinkA);
+  for(const s of [me,bot]){s.dashCd=Math.max(0,s.dashCd-dt);s.inv=Math.max(0,s.inv-dt);s.buff=Math.max(0,s.buff-dt);s.hit=Math.max(0,s.hit-dt);}
+  // io: movimento (joystick del gioco) + scatto + limiti
+  if(me.dashT>0){me.dashT-=dt;R.tx+=me.dx*DMC.dashV*dt;R.ty+=me.dy*DMC.dashV*dt;}
+  {const o={x:R.tx,y:R.ty};dmKeep(o,1);R.tx=o.x;R.ty=o.y;}
+  // IA
+  if(D.net)dmNetTick(dt);else dmBot(dt);if(R.over)return;
+  // fuoco automatico verso l'avversario
+  // velocità stimate per il tiro anticipato (l'auto-mira prevede dove sarà il bersaglio)
+  for(const [o,x,y] of [[me,R.tx,R.ty],[bot,bot.x,bot.y]]){if(o._px!=null&&dt>0){const k=Math.min(1,dt*8);o.vx=(o.vx||0)+(((x-o._px)/dt)-(o.vx||0))*k;o.vy=(o.vy||0)+(((y-o._py)/dt)-(o.vy||0))*k;}o._px=x;o._py=y;}
+  const fire=(i)=>{const s=i?bot:me,x=i?bot.x:R.tx,y=i?bot.y:R.ty,tg=i?me:bot,ld=i?0.55:0.9,d0=dist(x,y,i?R.tx:bot.x,i?R.ty:bot.y)/DMC.spd,ox=(i?R.tx:bot.x)+(tg.vx||0)*d0*ld,oy=(i?R.ty:bot.y)+(tg.vy||0)*d0*ld;s.cd=(s.cd||0)-dt;if(s.cd>0||s.dashT>0)return;const d=d0*DMC.spd;if(d>360)return;
+    s.cd=DMC.rate;let a=Math.atan2(oy-y,ox-x);if(i)a+=(Math.random()-.5)*0.24;const sh={x:x+Math.cos(a)*16,y:y+Math.sin(a)*16,vx:Math.cos(a)*DMC.spd,vy:Math.sin(a)*DMC.spd,l:DMC.life,o:i,d:DMC.dmg*(s.buff>0?1.35:1)};D.shots.push(sh);if(!i&&D.net)dmNetShot([sh]);if(i)bot.aim=a;else R.aim=a;};
+  fire(0);if(!D.net)fire(1);
+  // colpi
+  D.shots=D.shots.filter(s=>{s.l-=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;const pl=dmBlocked(s.x,s.y);if(pl){burst(s.x,s.y,'#cfc6ef',4,30);return false;}
+    const tg=s.o?{x:R.tx,y:R.ty,st:me}:{x:bot.x,y:bot.y,st:bot};if(dist(s.x,s.y,tg.x,tg.y)<(s.big?20:16)){if(tg.st.inv>0)return true;if(D.net&&!s.o){D.me.sup=Math.min(100,D.me.sup+s.d*1.4);bot.hit=0.15;}else dmHurt(s.o?0:1,s.d,s.o);burst(s.x,s.y,s.o?'#ffb44a':'#5ff1ff',8,30);return false;}return s.l>0;});
+  // zona del Vuoto
+  for(const i of (D.net?[0]:[0,1])){const x=i?bot.x:R.tx,y=i?bot.y:R.ty;if(dist(x,y,D.cx,D.cy)>D.rad)dmHurt(i,DMC.zone*dt,-1);}
+  // celle di potenza al centro
+  D.cellT-=dt;if(D.cellT<=0&&D.cells.length<1){D.cellT=DMC.cellT;D.cellN=(D.cellN||0)+1;const k=['dmg','heal','sup'][D.net?(D.round+D.cellN)%3:Math.random()*3|0];D.cells.push({x:D.cx,y:D.cy,k,t:0,id:D.round*100+D.cellN});R.banner={t:'⚡ CELLA DI POTENZA AL CENTRO',c:'#ffd54a',l:1.2};}
+  D.cells=D.cells.filter(c=>{c.t+=dt;if(D.net&&NET.op.k===c.id)return false;for(const i of (D.net?[0]:[0,1])){const x=i?bot.x:R.tx,y=i?bot.y:R.ty,s=i?bot:me;if(dist(x,y,c.x,c.y)<24){if(c.k==='dmg')s.buff=6;else if(c.k==='heal'){if(i)bot.hp=Math.min(DMC.hp,bot.hp+30);else R.hp=Math.min(DMC.hp,R.hp+30);}else s.sup=Math.min(100,s.sup+50);
+    if(!i)D.pk=c.id;txt(x,y,c.k==='dmg'?'DANNO +35%':c.k==='heal'?'+30 SCAFO':'SUPER +50%','#ffd54a',13,70);ring(x,y,60,'#ffd54a');try{sfx('badge');}catch(e){}return false;}}return true;});
+  dmUiUpd();}
+function dmHurt(i,amt,from){const D=R.dm;if(D.ph!=='fight')return;if(i===0){R.hp-=amt;D.me.hit=0.15;R.hurt=0.15;if(from>=0){R.shake=Math.max(R.shake,4);try{sfx('hurt');}catch(e){}D.bot.sup=Math.min(100,D.bot.sup+amt*1.4);}}
+  else{D.bot.hp-=amt;D.bot.hit=0.15;if(from>=0)D.me.sup=Math.min(100,D.me.sup+amt*1.4);}
+  if(R.hp<=0||(!D.net&&D.bot.hp<=0)){const w=R.hp<=0?1:0;if(D.net&&w){D.deaths++;dmNetSend(true);}D.score[w]++;D.ph='ko';D.pt=2.6;const x=w?R.tx:D.bot.x,y=w?R.ty:D.bot.y;burst(x,y,w?'#5ff1ff':'#ffb44a',60,50);R.shake=18;R.flash=0.6;R.slow=1;
+    R.banner={t:'K.O.!',c:w?'#ffb44a':'#5ff1ff',l:2.2,s:(w?(D.net?(NET.opName||'L\'avversario'):'L\'IA')+' vince il round':'Hai vinto il round')+' · '+D.score[0]+' – '+D.score[1],sc:'#fff'};try{sfx('big');buzz([120,60,200]);}catch(e){}}}
+function dmBot(dt){const D=R.dm,b=D.bot,me={x:R.tx,y:R.ty};const d=dist(b.x,b.y,me.x,me.y),a=Math.atan2(me.y-b.y,me.x-b.x);
+  b.strT-=dt;if(b.strT<=0){b.str=-b.str;b.strT=1.2+Math.random()*1.8;}
+  let vx=Math.cos(a+Math.PI/2)*b.str,vy=Math.sin(a+Math.PI/2)*b.str;const want=170;vx+=Math.cos(a)*(d-want)/80;vy+=Math.sin(a)*(d-want)/80;
+  const dc=dist(b.x,b.y,D.cx,D.cy);if(dc>D.rad-50){const ac=Math.atan2(D.cy-b.y,D.cx-b.x);vx+=Math.cos(ac)*2.5;vy+=Math.sin(ac)*2.5;}
+  if(D.cells.length){const c=D.cells[0],dcb=dist(b.x,b.y,c.x,c.y),dcm=dist(me.x,me.y,c.x,c.y);if(dcb<dcm*1.2){const ac=Math.atan2(c.y-b.y,c.x-b.x);vx+=Math.cos(ac)*2;vy+=Math.sin(ac)*2;}}
+  // schivata: colpo in arrivo
+  b.react-=dt;for(const s of D.shots){if(s.o!==0)continue;const rx=b.x-s.x,ry=b.y-s.y,sp=Math.hypot(s.vx,s.vy),along=(rx*s.vx+ry*s.vy)/sp;if(along<0||along>120)continue;const perp=Math.abs(rx*s.vy-ry*s.vx)/sp;
+    if(s.see==null)s.see=Math.random()<0.5;if(perp<22&&s.see){const px=-s.vy/sp,py=s.vx/sp,sg=(rx*px+ry*py)>=0?1:-1;if(b.dashCd<=0&&b.react<=0&&Math.random()<0.3){b.dvx=px*sg;b.dvy=py*sg;dmDash(1);b.react=0.6;}else{vx+=px*sg*2.2;vy+=py*sg*2.2;}break;}}
+  const m=Math.hypot(vx,vy)||1,sp=TSPD*0.95*Math.min(1,m);if(b.dashT>0){b.dashT-=dt;b.x+=b.dx*DMC.dashV*dt;b.y+=b.dy*DMC.dashV*dt;}else{b.x+=vx/m*sp*dt;b.y+=vy/m*sp*dt;}
+  dmKeep(b);if(b.sup>=100&&d<300&&Math.random()<0.02)dmSuper(1);}
+function dmUiUpd(){const D=R.dm,a=$('dmDash'),s=$('dmSup'),f=$('dmSupF');if(!a)return;a.classList.toggle('cd',D.me.dashCd>0);a.style.setProperty('--p',(1-D.me.dashCd/DMC.dashCd)*100+'%');
+  s.classList.toggle('rdy',D.me.sup>=100);f.style.height=D.me.sup+'%';}
+(function(){const _u=update;update=function(dt){_u.apply(this,arguments);try{if(R&&R.dm)dmTick(dt);}catch(e){console.error(e);}};
+  const _dr=draw;draw=function(){_dr.apply(this,arguments);try{if(R&&R.dm)dmDraw();}catch(e){console.error(e);}};})();
+function dmDraw(){const D=R.dm,t=R.t,b=D.bot;
+  // zona: anello rosso pulsante e bordo del Vuoto
+  g.save();g.globalCompositeOperation='lighter';groundCircle(D.cx,D.cy,D.rad,1,'#ff3d5e'+(Math.sin(t*6)>0?'ff':'aa'),'rgba(255,40,80,0)',3,72);g.setLineDash([8,8]);g.lineDashOffset=t*30;groundCircle(D.cx,D.cy,D.rad+12,1,'#ff3d5e66',null,2,72);g.setLineDash([]);g.restore();
+  for(const p of D.pil){prism(p.x,p.y,0,46,ngon(6),p.r,0.3,'#3a2a5a',1,'#b48bff',0.85);orb(p.x,48,p.y,3,'#b48bff',true);}
+  for(const c of D.cells){const col=c.k==='dmg'?'#ff4d6d':c.k==='heal'?'#7dff6a':'#45e9ff';const hh=26+Math.sin(c.t*4)*5;g.save();g.globalCompositeOperation='lighter';groundCircle(c.x,c.y,26+Math.sin(c.t*6)*4,1,col,'rgba(255,255,255,.05)',2,32);g.restore();orb(c.x,hh,c.y,8,col,true);}
+  {const p=proj(b.x,0,b.y);if(b.inv>0)g.globalAlpha=0.5;drawTowerBig(t*1.5,'#ffb44a',false,0,t,{pos:[b.x,b.y],skin:'magma',shots:1,aim:b.aim,mods:[],hpLv:0,model:'cruiser'});g.globalAlpha=1;drawHpOver(b.x,b.y,Math.max(0,b.hp/DMC.hp),D.net?String(NET.opName||'').slice(0,8):'IA','#ffb44a',b.hit);if(b.buff>0){const q=proj(b.x,70,b.y);g.save();g.font="bold 11px 'Russo One',sans-serif";g.textAlign='center';g.fillStyle='#ff4d6d';g.fillText('⚔ +35%',q[0],q[1]);g.restore();}}
+  for(const s of D.shots){const p=proj(s.x,40,s.y),c=s.o?'#ffb44a':'#5ff1ff',r=(s.big?11:8)*p[2];g.save();g.globalCompositeOperation='lighter';const gr=g.createRadialGradient(p[0],p[1],0,p[0],p[1],r);gr.addColorStop(0,'#fff');gr.addColorStop(0.35,c);gr.addColorStop(1,c+'00');g.fillStyle=gr;g.beginPath();g.arc(p[0],p[1],r,0,7);g.fill();g.restore();}
+  if(D.me.inv>0){const q=proj(R.tx,24,R.ty);g.save();g.globalCompositeOperation='lighter';g.strokeStyle='#5ff1ff';g.lineWidth=2;g.beginPath();g.ellipse(q[0],q[1],30*q[2],22*q[2],0,0,7);g.stroke();g.restore();}
+  // tabellone
+  g.save();g.translate(VW/2,30);g.fillStyle='rgba(8,4,20,.88)';rr(-120,-22,240,48,12);g.fill();g.strokeStyle='rgba(255,61,94,.7)';g.lineWidth=1.5;g.stroke();g.textAlign='center';g.textBaseline='middle';
+  g.font="bold 9px 'Russo One',sans-serif";g.fillStyle='#ff3d5e';g.fillText('DUELLO MORTALE · ROUND '+D.round,0,-12);g.font="22px 'Russo One',sans-serif";g.fillStyle='#5ff1ff';g.fillText(D.score[0],-40,8);g.fillStyle='#fff';g.fillText('–',0,8);g.fillStyle='#ffb44a';g.fillText(D.score[1],40,8);
+  g.font="bold 8px 'Russo One',sans-serif";g.fillStyle='#5ff1ff';g.fillText('TU',-90,-2);g.fillStyle='#ffb44a';g.fillText(D.net?String(NET.opName||'').slice(0,8).toUpperCase():'IA',90,-2);g.restore();if(D.net){const lag=srvNow()-NET.opRecv;g.save();g.font="bold 9px sans-serif";g.textAlign='right';g.fillStyle=lag<600?'#7dff6a':lag<2500?'#ffd54a':'#ff3d5e';g.fillText(lag<600?'📶 online':lag<2500?'📶 lento':'📶 connessione…',VW-10,70);g.restore();}
+  if(dist(R.tx,R.ty,D.cx,D.cy)>D.rad){g.save();const gr=g.createRadialGradient(VW/2,VH/2,VH*0.3,VW/2,VH/2,VH*0.7);gr.addColorStop(0,'rgba(255,0,60,0)');gr.addColorStop(1,'rgba(255,0,60,.45)');g.fillStyle=gr;g.fillRect(0,0,VW,VH);g.font="bold 13px 'Russo One',sans-serif";g.textAlign='center';g.fillStyle='#ff3d5e';g.fillText('⚠ SEI NEL VUOTO · TORNA DENTRO',VW/2,VH*0.2);g.restore();}
+  if(D.t>DMC.shrinkA-3&&D.t<DMC.shrinkA){g.save();g.font="bold 13px 'Russo One',sans-serif";g.textAlign='center';g.fillStyle='#ff3d5e';g.fillText('IL VUOTO SI STRINGE TRA '+Math.ceil(DMC.shrinkA-D.t),VW/2,VH*0.2);g.restore();}}
+function dmEnd(){const D=R.dm,win=D.score[0]>D.score[1];R.over=true;dmUi(false);try{sfx(win?'badge':'wave');}catch(e){}
+  modal(`<div class="goBox"><div class="goTag">DUELLO MORTALE · ALLENAMENTO</div><div class="goTitle" style="color:${win?'#5ff1ff':'#ffb44a'}">${win?'VITTORIA!':'SCONFITTA'}</div>
+   <div class="pvpScore"><div style="color:#5ff1ff"><small>TU</small><b>${D.score[0]}</b></div><span>–</span><div style="color:#ffb44a"><small>IA</small><b>${D.score[1]}</b></div></div>
+   <button class="b3 red goMain" onclick="hideModal();pvpUi(false);toMenu('sHome');startDuel()">⚔️ Rivincita</button><button class="b3 goMain" onclick="hideModal();pvpUi(false);toMenu('sHome')">🏠 Home</button></div>`);}
+function dmQuit(){if(!R||!R.dm)return;if(R.dm.net&&!R.over){R.dm.deaths=2;R.dm.score[1]=2;dmNetSend(true);return dmNetEnd(false);}R.over=true;dmUi(false);pvpUi(false);toMenu('sHome');}
+
+// ---------- DUELLO MORTALE ONLINE ----------
+// Ogni telefono muove la propria navicella e calcola i colpi che lo colpiscono; posizione, vita e round passano dal database in tempo reale.
+function dmNetBegin(id,me,room){netCloseStreams();NET.room=id;NET.me=me;NET.seen={};NET.seq=0;NET.lastSend=0;NET.inFl=false;NET.op={x:0,y:0,h:DMC.hp,d:0,k:0,v:0,b:0,a:0};NET.opRecv=srvNow();NET.state='play';
+  NET.opName=me?room.na:room.nb;NET.opCups=me?room.ca:room.cb;NET.startAt=(room.start||srvNow())+4000;
+  startDuel();const D=R.dm;D.net=true;D.side=me?-1:1;D.deaths=0;D.pk=0;D.round=0;dmRound();document.body.classList.add('dmNet');
+  netStream(`rooms/${id}/p${1-me}`,(ty,p,d)=>{if(!d&&p==='/')return;if(p==='/')Object.assign(NET.op,d);else NET.op[p.slice(1)]=d;NET.opRecv=srvNow();});
+  netStream(`rooms/${id}/f${1-me}`,(ty,p,d)=>{const add=s=>{if(!s||NET.seen[s.i]||!R||!R.dm)return;NET.seen[s.i]=1;const dt=Math.max(0,(srvNow()-s.ts)/1000),life=s.big?1.4:DMC.life;if(dt>life)return;
+      R.dm.shots.push({x:s.x+s.vx*dt,y:s.y+s.vy*dt,vx:s.vx,vy:s.vy,l:life-dt,o:1,d:s.d||DMC.dmg,big:s.big?1:0});};
+    if(p==='/'){if(d)Object.values(d).forEach(add);}else if(ty==='patch'){Object.values(d||{}).forEach(add);}else add(d);});}
+function dmNetSend(force){const D=R&&R.dm;if(!D||!D.net)return;if(NET.inFl&&!force)return;const now=srvNow();if(!force&&now-NET.lastSend<100)return;NET.lastSend=now;NET.inFl=true;
+  rt(`rooms/${NET.room}/p${NET.me}`,'PUT',{x:Math.round(R.tx),y:Math.round(R.ty),a:+(R.aim||0).toFixed(2),h:Math.max(0,Math.round(R.hp)),d:D.deaths,k:D.pk||0,v:D.me.inv>0?1:0,b:D.me.buff>0?1:0,n:netName(),ts:now}).catch(()=>{}).finally(()=>{NET.inFl=false;});}
+function dmNetShot(list){const up={},now=srvNow();for(const sh of list){const s={i:FB.uid.slice(0,4)+'_'+(++NET.seq),x:Math.round(sh.x),y:Math.round(sh.y),vx:Math.round(sh.vx),vy:Math.round(sh.vy),ts:now,d:+sh.d.toFixed(1),big:sh.big?1:0};up[NET.seq%24]=s;}
+  rt(`rooms/${NET.room}/f${NET.me}`,'PATCH',up).catch(()=>{});}
+function dmNetTick(dt){const D=R.dm,b=D.bot,op=NET.op,now=srvNow();
+  if(op.x){if(!b._sync){b.x=op.x;b.y=op.y;b._sync=1;}b.x+=(op.x-b.x)*Math.min(1,dt*12);b.y+=(op.y-b.y)*Math.min(1,dt*12);}
+  b.hp=op.h==null?DMC.hp:op.h;b.inv=op.v?0.1:0;b.buff=op.b?1:0;b.aim=op.a||0;
+  const od=op.d|0;if(od>D.score[0]){D.score[0]=od;if(D.ph==='fight'){D.ph='ko';D.pt=2.6;burst(b.x,b.y,'#ffb44a',60,50);R.shake=18;R.flash=0.6;R.slow=1;
+    R.banner={t:'K.O.!',c:'#5ff1ff',l:2.2,s:'Hai vinto il round · '+D.score[0]+' – '+D.score[1],sc:'#fff'};try{sfx('big');buzz([120,60,200]);}catch(e){}}}
+  dmNetSend();
+  if(now>NET.startAt+3000&&now-NET.opRecv>10000)dmNetEnd(true);}
+function dmNetEnd(forfeit){const D=R&&R.dm;if(!D||R.over)return;dmUi(false);document.body.classList.remove('dmNet');R.net=true;R.pvpPh=2;R.pv=[{c:0,dmg:0,hp:0,spd:0}];R.myShots=[];R.netShots=[];NET.op.d=D.score[0];R.netD=D.score[1];R.st.maxHp=DMC.hp;try{netEnd(forfeit);}finally{R.net=false;}}
+(function(){const _nb=netBegin;netBegin=function(id,me,room){if((room&&room.m||'pvp')==='pvp')return dmNetBegin(id,me,room);return _nb.apply(this,arguments);};
+  const _pa=pause;pause=function(){if(R&&R.dm&&R.dm.net&&!R.over){modal(`<div class="ru" style="font-size:22px">Abbandonare il duello?</div><p class="small">Nel PvP online la partita non si mette in pausa. Se esci perdi il duello.</p><button class="b3 red" style="width:100%" onclick="hideModal();dmQuit()">🏳️ Abbandona</button><button class="b3" style="width:100%;margin-top:10px" onclick="hideModal()">⚔️ Continua a combattere</button>`);return;}return _pa.apply(this,arguments);};})();
+openPvp=function(){sfx('click');netCancel(true);NET.mode='pvp';
+  modal(`<div class="ru" style="font-size:24px">☠️ Duello mortale</div><p class="small" style="margin:4px 0 10px">PvP 1 vs 1: si combatte dal primo secondo. Al meglio dei 3 round.</p>
+  <div class="pvpPh"><div><b style="color:#ff3d5e">ARENA CHE SI RESTRINGE</b><span>Il Vuoto divora i bordi: chi resta fuori perde scafo. Ripàrati dietro le colonne.</span></div><div><b style="color:#45e9ff">SCATTO E SUPER</b><span>Lo scatto ti rende intoccabile per un istante. Infliggi danni per caricare la SUPER, una raffica a ventaglio.</span></div><div><b style="color:#ffd54a">CELLE DI POTENZA</b><span>Al centro compaiono danno, scafo o carica super: contendetevele.</span></div></div>
+  <ul class="small coopRules"><li>Navicella uguale per tutti: vince l'abilità</li><li>Vittoria +30 🏆 · Sconfitta −15</li><li>Se l'avversario si disconnette vinci a tavolino</li></ul>
+  <button class="b3 red goMain" style="width:100%" onclick="netQuick('pvp')">🔎 Cerca avversario</button>
+  <div class="row" style="gap:8px;margin-top:10px"><button class="b3 cyan" style="flex:1" onclick="netHost('pvp')">👥 Crea stanza</button><button class="b3" style="flex:1" onclick="NET.mode='pvp';netJoinAsk()">🔑 Entra con codice</button></div>
+  <button class="b3" style="width:100%;margin-top:10px" onclick="hideModal();startDuel()">🤖 Allenamento contro l'IA</button>
+  <button class="lbOpen" style="margin-top:10px" onclick="openLb('pvp')"><span>🏆 Classifica PvP</span><span class="lbOpenB">${cupsBadge('pvp')}</span></button>
+  <button class="b3" style="width:100%;margin-top:10px" onclick="openMulti()">‹ Indietro</button>`);};
+// ======================= v2.1 · ELIMINAZIONE ACCOUNT E DATI (richiesta da Google Play) =======================
+function accDelAsk(){sfx('click');modal(`<div class="ru" style="font-size:22px">🗑️ Elimina account e dati</div>
+  <p class="small" style="text-align:left;line-height:1.5">Verranno cancellati per sempre: il tuo profilo online, i salvataggi nel cloud, gli amici, la posta, i punteggi in classifica e l'iscrizione al clan. Anche i progressi su questo telefono verranno azzerati. <b>Non si può annullare.</b></p>
+  <p class="small">Per confermare scrivi <b>ELIMINA</b></p><input id="accDelIn" class="inp" autocomplete="off" style="width:100%;text-align:center;text-transform:uppercase" placeholder="ELIMINA">
+  <button class="b3 red" style="width:100%;margin-top:12px" onclick="accDelGo()">Elimina definitivamente</button><button class="b3" style="width:100%;margin-top:10px" onclick="hideModal()">Annulla</button>`);}
+async function accDelGo(){const v=(($('accDelIn')||{}).value||'').trim().toUpperCase();if(v!=='ELIMINA'){toast('Scrivi ELIMINA per confermare');return;}
+  modal(`<div class="ru" style="font-size:20px">Eliminazione in corso…</div><p class="small">Non chiudere il gioco.</p>`);
+  const uid=FB.uid,del=p=>fsReq(p,{method:'DELETE'}).catch(()=>{});
+  if(uid&&FB.tok){try{
+    for(const sub of ['friends','inbox']){try{const r=await fsReq(`/players/${uid}/${sub}?pageSize=200`);const docs=(r&&r.documents)||[];for(const d of docs){const id=d.name.split('/').pop();await del(`/players/${uid}/${sub}/${id}`);if(sub==='friends')await del(`/players/${id}/friends/${uid}`);}}catch(e){}}
+    if(S.guild&&S.guild.id)await del(`/guilds/${S.guild.id}/m/${uid}`);
+    for(const p of [`/players/${uid}`,`/saves/${uid}`,`/lb_pvp/${uid}`,`/lb_coop/${uid}`,`/presence/${uid}`])await del(p);
+    try{await del(`/lb_day/${dayKey()}/p/${uid}`);}catch(e){}
+    await fetch('https://identitytoolkit.googleapis.com/v1/accounts:delete?key='+FB_CFG.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:FB.tok})}).catch(()=>{});
+  }catch(e){}}
+  try{for(const k of Object.keys(localStorage))if(/^destroy/i.test(k)||k===ACC_K)localStorage.removeItem(k);}catch(e){}
+  window.onbeforeunload=null;try{saveG=()=>{};save=()=>{};}catch(e){}
+  modal(`<div class="ru" style="font-size:22px">Account eliminato</div><p class="small">I tuoi dati sono stati cancellati. Il gioco ripartirà da zero.</p><button class="b3" style="width:100%" onclick="location.reload()">OK</button>`);}
+(function(){const _par=profAccRender;profAccRender=function(){_par.apply(this,arguments);const a=$('profAcc');if(a&&!$('accDelB')){const b=document.createElement('button');b.id='accDelB';b.className='accDelB';b.textContent='🗑️ Elimina account e dati';b.onclick=accDelAsk;a.appendChild(b);}};})();
+// ======================= v2.1 · ACQUISTI IN-APP DEI NUCLEI (Google Play Billing, solo nell'app Android) =======================
+const IAP_IDS=['nuc_10','nuc_60','nuc_150'];   // stesso ordine di PREMIUM; ID identici a quelli di Play Console
+function iapOn(){try{return !!(window.DestroyBilling&&DestroyBilling.ready());}catch(e){return false;}}
+function iapPrices(){try{return JSON.parse(DestroyBilling.prices()||'{}');}catch(e){return {};}}
+function iapBuy(i){const id=IAP_IDS[i];if(!id)return;if(!iapOn()){toast('Acquisti disponibili nell\'app Android da Google Play');return;}sfx('click');try{DestroyBilling.buy(id);}catch(e){toast('Negozio non disponibile, riprova');}}
+function iapGrant(id,token){const i=IAP_IDS.indexOf(id);if(i<0)return;if(!S.iapDone)S.iapDone=[];
+  if(S.iapDone.includes(token)){try{DestroyBilling.consume(token);}catch(e){}return;}   // già consegnato: chiudo l'acquisto
+  const q=PREMIUM[i].q;S.nuc+=q;S.iapDone.push(token);if(S.iapDone.length>40)S.iapDone=S.iapDone.slice(-40);
+  S.st=S.st||{};S.st.iap=(S.st.iap||0)+1;save();try{if(typeof cloudSave==='function')cloudSave();}catch(e){}
+  try{DestroyBilling.consume(token);}catch(e){}
+  try{sfx('badge');}catch(e){}if(typeof shopRefresh==='function')try{shopRefresh();}catch(e){}
+  modal(`<div class="ru nuc" style="font-size:24px">✦ Grazie!</div><div class="ru" style="font-size:34px;margin:8px 0">+${q} <span class="nuc">✦</span></div><p class="small">${PREMIUM[i].n} aggiunto ai tuoi Nuclei.</p><button class="b3" style="width:100%" onclick="hideModal();openShop()">Continua</button>`);}
+function iapEvent(t,msg){if(t==='prices'){if($('ov')&&$('ov').style.display==='flex'&&$('ovBox').innerHTML.includes('✦ Nuclei'))try{openShop();}catch(e){}}
+  else if(t==='pending')toast('Pagamento in attesa: i Nuclei arriveranno appena Google lo conferma');
+  else if(t==='error')toast('Acquisto non riuscito'+(msg?': '+msg:''));}
+(function(){const _os=openShop;openShop=function(){_os.apply(this,arguments);const box=$('ovBox');if(!box)return;
+  const on=iapOn(),pr=on?iapPrices():{};let k=0;
+  box.querySelectorAll('button[disabled]').forEach(b=>{if(b.textContent.trim()!=='In arrivo')return;const i=k++;const id=IAP_IDS[i];
+    b.disabled=false;b.className='b3 red';b.style.minWidth='86px';
+    if(on){b.textContent=pr[id]||PREMIUM[i].p;b.onclick=()=>iapBuy(i);}else{b.textContent=PREMIUM[i].p;b.onclick=()=>toast('Acquistabile nell\'app Android da Google Play');b.style.opacity='.6';}});};})();
+
 (function(){const s=document.createElement('style');s.id='v18css';s.textContent=`
 /* ---- FAZIONI ---- */
 #facPick{position:fixed;inset:0;z-index:9000;background:radial-gradient(ellipse at 50% 0,#2a1a5a,#05020e 70%);display:flex;flex-direction:column;gap:10px;padding:calc(16px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));overflow:auto;animation:fpIn .5s ease-out}
@@ -5932,6 +6100,17 @@ function introMus(t){
 #i3s{position:absolute;top:calc(9vh + env(safe-area-inset-top));right:14px;z-index:4;background:#0008;border:1px solid #ffffff44;color:#fff;border-radius:20px;padding:8px 14px;font-size:12px}
 #i3snd{position:absolute;left:0;right:0;margin:0 auto;width:max-content;top:calc(9vh + 60px);z-index:4;background:#0009;border:1px solid #ffffff33;color:#fff;border-radius:20px;padding:7px 14px;font-size:12px;pointer-events:none;animation:mlPulse 1.6s infinite}
 #i3s{transition:opacity .4s}#i3.out{opacity:0;transition:opacity .6s}
+.accDelB{display:block;margin:14px auto 0;background:none;border:0;color:#ff7a8a;font-size:12px;text-decoration:underline;opacity:.8}
+`;document.head.appendChild(s);})();
+
+(function(){const s=document.createElement('style');s.id='v21css';s.textContent=`#dmUi{position:absolute;right:14px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;display:flex;gap:12px;align-items:flex-end}
+#dmUi button{position:relative;width:74px;height:74px;border-radius:50%;border:3px solid #000;color:#fff;font-family:'Russo One',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 5px 0 #000;touch-action:none}
+#dmDash{background:conic-gradient(#45e9ff var(--p,100%),#1a2a44 0);font-size:26px}#dmDash small,#dmSup small{font-size:9px;letter-spacing:1px}#dmDash.cd{filter:saturate(.4)}
+#dmSup{width:92px!important;height:92px!important;background:#1a1236;font-size:30px}#dmSup i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(0deg,#ff3d6e,#ffd54a);opacity:.55}#dmSup b,#dmSup small{position:relative}
+#dmSup.rdy{animation:supP .6s infinite alternate;border-color:#ffd54a}@keyframes supP{to{box-shadow:0 5px 0 #000,0 0 26px #ffd54a}}
+body.dmOn #upDrawer,body.dmOn #upHint,body.dmOn #bCoinW,body.dmOn #bWaveF,body.dmOn #bWave,body.dmOn #abBtn{display:none!important}
+body.dmOn #battle .wavebar,body.dmOn #wavePrev,body.dmOn #misPill{display:none!important}
+body.dmOn #bFrag,body.dmOn #battle .hpbar{display:none!important}
 `;document.head.appendChild(s);})();
 
 try{if(typeof renderHome==='function'&&curScreen==='sHome')renderHome();}catch(e){}
